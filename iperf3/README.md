@@ -8,13 +8,15 @@
 docker network inspect iperf3_iperf-net | grep Subnet
 ```
 
+E.g: `172.18.0.0/16`
+
 - Find the associated interface
 
 ```sh
-ip a
+ip a | grep -B 2 "172.18"
 ```
 
-E.g.: `br-3f00e7b74404`
+E.g.: `br-ce12e4ae0a72`
 
 - Record packets
 

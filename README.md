@@ -41,14 +41,14 @@ sudo reboot
 uname -r
 ```
 
-- Activate the modules
-
-```sh
-./activate_kernel_modules.sh
-```
-
 - Install dependencies
 
 ```sh
 ./install_dependencies.sh
+```
+
+- Activate the modules. ⚠️ We might need to execute thios command at every restart.
+
+```sh
+./activate_kernel_modules.sh
 ```
