@@ -1,0 +1,1 @@
+while true; do iperf3 -c iperf-server --time 1; sleep 5; done

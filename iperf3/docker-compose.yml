@@ -2,16 +2,18 @@ services:
   iperf-client:
     image: networkstatic/iperf3:latest
     container_name: iperf-client
-    command: ["-c", "iperf-server", "-t", "30"]
+    entrypoint: ["sh", "-c", "cd /root && ./client_entrypoint.sh"]
+    volumes:
+      - ./client_entrypoint.sh:/root/client_entrypoint.sh
     depends_on:
       - iperf-server
     networks:
       - iperf-net
-  
+
   iperf-server:
     image: networkstatic/iperf3:latest
     container_name: iperf-server
-    command: ["-s"]
+    entrypoint: ["iperf3", "-s", "--server-bitrate-limit", "10M"]
     networks:
       - iperf-net
 
