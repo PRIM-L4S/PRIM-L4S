@@ -5,7 +5,7 @@
 - Install the kernel
 
 ```sh
-./install.sh
+./install_kernel.sh
 ```
 
 - Get the path of the menu entry. For that, we must find the name of the Linux Prague GRUB menu entry and, if necessary, the name of the sub menu it is into.
@@ -44,5 +44,11 @@ uname -r
 - Activate the modules
 
 ```sh
-./activate.sh
+./activate_kernel_modules.sh
+```
+
+- Install dependencies
+
+```sh
+./install_dependencies.sh
 ```

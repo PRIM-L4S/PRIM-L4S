@@ -1,0 +1,20 @@
+services:
+  iperf-client:
+    image: networkstatic/iperf3:latest
+    container_name: iperf-client
+    command: ["-c", "iperf-server", "-t", "30"]
+    depends_on:
+      - iperf-server
+    networks:
+      - iperf-net
+  
+  iperf-server:
+    image: networkstatic/iperf3:latest
+    container_name: iperf-server
+    command: ["-s"]
+    networks:
+      - iperf-net
+
+networks:
+  iperf-net:
+    driver: bridge
