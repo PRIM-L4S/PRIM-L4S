@@ -7,16 +7,27 @@ services:
       - ./client_entrypoint.sh:/root/client_entrypoint.sh
     depends_on:
       - iperf-server
+      - router
     networks:
-      - iperf-net
+      - iperf-client-net
+
+  router:
+    # I'm trying to be fancy here, but a simple alpine image would do the job too
+    image: gcr.io/distroless/base
+    container_name: router
+    networks:
+      - iperf-client-net
+      - iperf-server-net
 
   iperf-server:
     image: networkstatic/iperf3:latest
     container_name: iperf-server
     entrypoint: ["iperf3", "-s", "--server-bitrate-limit", "10M"]
     networks:
-      - iperf-net
+      - iperf-server-net
 
 networks:
-  iperf-net:
+  iperf-client-net:
+    driver: bridge
+  iperf-server-net:
     driver: bridge

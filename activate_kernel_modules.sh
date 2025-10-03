@@ -9,3 +9,7 @@ sudo sysctl -w net.ipv4.tcp_ecn=1
 
 # Set default congestion control algorithm to Prague
 sudo sysctl -w net.ipv4.tcp_congestion_control=prague
+
+# Enable IP forwarding, used for our Containerized router experiments
+# We don't really need to do it because it is 1 by default
+sudo sysctl -w net.ipv4.ip_forward=1
