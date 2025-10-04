@@ -1,0 +1,12 @@
+FROM networkstatic/iperf3:latest
+
+# Install iproute2 package for adding routes
+RUN apt-get update && apt-get install -y iproute2
+
+# Copy the entrypoint script into the container
+COPY entrypoint_client.sh /root/entrypoint_client.sh
+RUN chmod +x /root/entrypoint_client.sh
+
+# Set the entrypoint to the script
+WORKDIR /root
+ENTRYPOINT ["sh", "-c", "./entrypoint_client.sh"]

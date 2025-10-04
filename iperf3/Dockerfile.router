@@ -1,0 +1,12 @@
+FROM alpine:latest
+
+# Install iptables package for NAT and routing
+RUN apk add --no-cache iptables ip6tables
+
+# Copy the entrypoint script into the container
+COPY entrypoint_router.sh /root/entrypoint_router.sh
+RUN chmod +x /root/entrypoint_router.sh
+
+# Set the entrypoint to the script
+WORKDIR /root
+ENTRYPOINT ["sh", "-c", "./entrypoint_router.sh"]

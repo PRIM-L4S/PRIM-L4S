@@ -1,33 +1,51 @@
 services:
   iperf-client:
-    image: networkstatic/iperf3:latest
     container_name: iperf-client
-    entrypoint: ["sh", "-c", "cd /root && ./client_entrypoint.sh"]
-    volumes:
-      - ./client_entrypoint.sh:/root/client_entrypoint.sh
+    build:
+      context: .
+      dockerfile: Dockerfile.client
     depends_on:
       - iperf-server
       - router
+    cap_add:
+      - NET_ADMIN
     networks:
-      - iperf-client-net
+      iperf-client-net:
+        ipv4_address: 172.20.1.10
 
   router:
-    # I'm trying to be fancy here, but a simple alpine image would do the job too
-    image: gcr.io/distroless/base
     container_name: router
+    build:
+      context: .
+      dockerfile: Dockerfile.router
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     networks:
-      - iperf-client-net
-      - iperf-server-net
+      iperf-client-net:
+        ipv4_address: 172.20.1.11
+      iperf-server-net:
+        ipv4_address: 172.20.2.11
 
   iperf-server:
-    image: networkstatic/iperf3:latest
     container_name: iperf-server
-    entrypoint: ["iperf3", "-s", "--server-bitrate-limit", "10M"]
+    build:
+      context: .
+      dockerfile: Dockerfile.server
     networks:
-      - iperf-server-net
+      iperf-server-net:
+        ipv4_address: 172.20.2.10
 
 networks:
   iperf-client-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+          gateway: 172.20.1.1
   iperf-server-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+          gateway: 172.20.2.1

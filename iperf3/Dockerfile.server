@@ -1,0 +1,9 @@
+FROM networkstatic/iperf3:latest
+
+# Copy the entrypoint script into the container
+COPY entrypoint_server.sh /root/entrypoint_server.sh
+RUN chmod +x /root/entrypoint_server.sh
+
+# Set the entrypoint to the script
+WORKDIR /root
+ENTRYPOINT ["sh", "-c", "./entrypoint_server.sh"]
