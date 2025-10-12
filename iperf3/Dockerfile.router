@@ -1,7 +1,7 @@
-FROM alpine:latest
+FROM debian:12.12
 
 # Install iptables package for NAT and routing
-RUN apk add --no-cache iptables ip6tables
+RUN apt-get update && apt-get install -y iproute2 ethtool iptables
 
 # Copy the entrypoint script into the container
 COPY entrypoint_router.sh /root/entrypoint_router.sh

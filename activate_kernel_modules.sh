@@ -1,5 +1,13 @@
-# sudo modprobe sch_dualpi2
+sudo modprobe sch_dualpi2
 sudo modprobe tcp_prague
+
+# TODO?
+# some preparations for having better paced traffic and reduce bursts for each network interface $NETIF that sends L4S traffic
+# Avoid processing 64K packets in the kernel, which will send those packets in a burst independent of the pacing (lro only for newer NICS and kernels that support it):
+# sudo ethtool -K $NETIF tso off gso off gro off lro off
+
+# fq qdisc needs to be configured on clients and server NICS (instead of fq_codel; fq is the only one that supports the pacing)
+# sudo tc qdisc replace dev $NETIF root handle 1: fq limit 20480 flow_limit 10240
 
 # Enable ECN
 sudo sysctl -w net.ipv4.tcp_ecn=1

@@ -1,4 +1,6 @@
-FROM networkstatic/iperf3:latest
+FROM debian:12.12
+
+RUN apt-get update && apt-get install -y iproute2 ethtool iperf3
 
 # Copy the entrypoint script into the container
 COPY entrypoint_server.sh /root/entrypoint_server.sh

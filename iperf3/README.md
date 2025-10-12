@@ -17,9 +17,20 @@ E.g.: `br-f5139c9911d7` and `br-f2bc663406af`
 - Record packets
 
 ```sh
-sudo tcpdump -i <interface> -s 65535 -w dump.pcap
+sudo tcpdump -i any -s 65535 -w dump.pcap
 ```
 
-Or use `-i any` to record on all interfaces.
+Or use `-i <interface>` to record only a specific interface.
 
 - Stop the recording with `Ctrl+C`. ⚠️ The file size can become very big very quick!!
+
+- Open the `.pcap` in Wireshark. You can use the filter `ip.addr >= 172.20.0.0 and ip.addr <= 172.20.255.255` to only keep the relevent traffic. You can also add `and ip.dsfield.ecn == 11` to check for L4S ECN.
+
+
+## Traceroute from the client
+
+```
+traceroute to 172.20.2.10 (172.20.2.10), 30 hops max, 60 byte packets
+ 1  router.iperf3_iperf-client-net (172.20.1.11)  0.293 ms  0.044 ms  0.042 ms
+ 2  172.20.2.10 (172.20.2.10)  0.311 ms  0.177 ms  0.184 ms
+```
