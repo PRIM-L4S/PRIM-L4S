@@ -24,7 +24,7 @@ Or use `-i <interface>` to record only a specific interface.
 
 - Stop the recording with `Ctrl+C`. ⚠️ The file size can become very big very quick!!
 
-- Open the `.pcap` in Wireshark. You can use the filter `ip.addr >= 172.20.0.0 and ip.addr <= 172.20.255.255` to only keep the relevent traffic. You can also add `and ip.dsfield.ecn == 11` to check for L4S ECN.
+- Open the `.pcap` in Wireshark. You can use the filter `ip.addr >= 172.20.0.0 and ip.addr <= 172.20.255.255` to only keep the relevent traffic. You can also add `and ip.dsfield.ecn == 1` to check for L4S marking and `and ip.dsfield.ecn == 3` for L4S ECN.
 
 
 ## Traceroute from the client

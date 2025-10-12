@@ -1,13 +1,18 @@
 NETIF0="eth0"
 NETIF1="eth1"
 
-# Required to improve L4S. See entrypoint_client.sh for comments on those lines.
+# Activate Dual PI2 Dual Queue AQM on the router
+# see https://www.man7.org/linux/man-pages/man8/tc-dualpi2.8.html
+#
+# If you intend to use non-default parameters for dualpi2, make sure to use the patched iproute2
+# see https://github.com/l4STeam/linux?tab=readme-ov-file#compilation
 ethtool -K $NETIF0 tso off gso off gro off lro off
-tc qdisc replace dev $NETIF0 root handle 1: fq limit 20480 flow_limit 10240
+tc qdisc add dev $NETIF0 root handle 1: dualpi2
 
 ethtool -K $NETIF1 tso off gso off gro off lro off
-tc qdisc replace dev $NETIF1 root handle 2: fq limit 20480 flow_limit 10240
+tc qdisc add dev $NETIF1 root handle 2: dualpi2
 
+# Make this a router
 iptables -t nat -A POSTROUTING -o $NETIF1 -j MASQUERADE
 iptables -A FORWARD -i $NETIF1 -o $NETIF0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A FORWARD -i $NETIF0 -o $NETIF1 -j ACCEPT
@@ -16,10 +21,18 @@ echo "Router ready"
 
 sleep 10
 
-# Limit bandwidth on both interfaces
-tc qdisc replace dev $NETIF0 root handle 1: fq limit 20480 flow_limit 10240 maxrate 100kbit
-tc qdisc replace dev $NETIF1 root handle 2: fq limit 20480 flow_limit 10240 maxrate 100kbit
+# Add bandwidth limiting to DUALPI2 - limit forwarded traffic to 1kbit
+# Remove the old qdiscs and add new ones with bandwidth control
+tc qdisc del dev $NETIF0 root
+tc qdisc del dev $NETIF1 root
 
-echo "Router slows down to 100 Kb/s"
+# TBF for bandwidth limiting + DUALPI2 for AQM
+tc qdisc add dev $NETIF0 root handle 1: tbf rate 100kbit burst 32kbit latency 400ms
+tc qdisc add dev $NETIF0 parent 1:1 handle 10: dualpi2
+
+tc qdisc add dev $NETIF1 root handle 2: tbf rate 100kbit burst 32kbit latency 400ms
+tc qdisc add dev $NETIF1 parent 2:1 handle 20: dualpi2
+
+echo "Router bandwidth limited to 100 kbit/s with DUALPI2 AQM"
 
 tail -f /dev/null
