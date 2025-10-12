@@ -6,10 +6,10 @@ NETIF1="eth1"
 #
 # If you intend to use non-default parameters for dualpi2, make sure to use the patched iproute2
 # see https://github.com/l4STeam/linux?tab=readme-ov-file#compilation
-ethtool -K $NETIF0 tso off gso off gro off lro off
+ethtool -K $NETIF0 tso off gso off gro off lro off # I'm not sure if this is needed on a router
 tc qdisc add dev $NETIF0 root handle 1: dualpi2
 
-ethtool -K $NETIF1 tso off gso off gro off lro off
+ethtool -K $NETIF1 tso off gso off gro off lro off # I'm not sure if this is needed on a router
 tc qdisc add dev $NETIF1 root handle 2: dualpi2
 
 # Make this a router
@@ -20,6 +20,8 @@ iptables -A FORWARD -i $NETIF0 -o $NETIF1 -j ACCEPT
 echo "Router ready"
 
 sleep 10
+# Make the change easily visible on Wireshark
+ping -c 1 1.1.1.1 > /dev/null
 
 # Add bandwidth limiting to DUALPI2 - limit forwarded traffic to 1kbit
 # Remove the old qdiscs and add new ones with bandwidth control
