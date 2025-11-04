@@ -14,9 +14,9 @@ tc qdisc add dev $NETIF1 root handle 2: dualpi2
 
 echo "Router ready"
 
-sleep 10
+# sleep 10
 # Make the change easily visible on Wireshark
-ping -c 1 1.1.1.1 > /dev/null
+# ping -c 1 1.1.1.1 > /dev/null
 
 # Add bandwidth limiting to DUALPI2 - limit forwarded traffic to 1kbit
 # Remove the old qdiscs and add new ones with bandwidth control

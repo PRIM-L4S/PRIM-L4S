@@ -46,3 +46,22 @@ ssh -L 9000:localhost:9000 l4s
 ```
 
 - Open http://localhost:9000
+
+## Generate templated files
+
+- Requierments
+
+```sh
+sudo apt install python3.12-venv
+python3 -m venv .venv
+source .venv/bin/activate
+pip install jinja2-cli
+```
+
+- Usage
+
+```sh
+source .venv/bin/activate
+jinja2 prometheus.yml.j2 template_vars.json > prometheus.yml
+jinja2 docker-compose.yml.j2 template_vars.json > docker-compose.yml
+```

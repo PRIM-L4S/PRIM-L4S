@@ -1,1 +1,4 @@
 *.pcap
+.venv/
+iperf3/docker-compose.yml
+iperf3/prometheus.yml

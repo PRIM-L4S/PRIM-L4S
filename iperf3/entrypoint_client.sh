@@ -1,7 +1,6 @@
 # Tell linux that iperf-server is reachable through the router
-ROUTER_IP="172.20.1.11"
+ROUTER_IP="172.20.1.2"
 IPERF_SERVER_SUBNET="172.20.2.0/24"
-IPERF_SERVER_IP="172.20.2.10"
 
 ip route add $IPERF_SERVER_SUBNET via $ROUTER_IP
 
