@@ -12,11 +12,6 @@ tc qdisc add dev $NETIF0 root handle 1: dualpi2
 ethtool -K $NETIF1 tso off gso off gro off lro off # I'm not sure if this is needed on a router
 tc qdisc add dev $NETIF1 root handle 2: dualpi2
 
-# Make this a router
-iptables -t nat -A POSTROUTING -o $NETIF1 -j MASQUERADE
-iptables -A FORWARD -i $NETIF1 -o $NETIF0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i $NETIF0 -o $NETIF1 -j ACCEPT
-
 echo "Router ready"
 
 sleep 10
@@ -35,6 +30,6 @@ tc qdisc add dev $NETIF0 parent 1:1 handle 10: dualpi2
 tc qdisc add dev $NETIF1 root handle 2: tbf rate 100kbit burst 32kbit latency 400ms
 tc qdisc add dev $NETIF1 parent 2:1 handle 20: dualpi2
 
-echo "Router bandwidth limited to 100 kbit/s with DUALPI2 AQM"
+echo "Router bandwidth limited to 100 kbit/s"
 
 tail -f /dev/null
