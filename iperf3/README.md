@@ -35,3 +35,14 @@ traceroute to 172.20.2.10 (172.20.2.10), 30 hops max, 60 byte packets
  1  router.iperf3_iperf-client-net (172.20.1.11)  0.293 ms  0.044 ms  0.042 ms
  2  172.20.2.10 (172.20.2.10)  0.311 ms  0.177 ms  0.184 ms
 ```
+
+## Access prometheus web UI
+
+
+- Open SSH tunnel:
+
+```sh
+ssh -L 9000:localhost:9000 l4s
+```
+
+- Open http://localhost:9000

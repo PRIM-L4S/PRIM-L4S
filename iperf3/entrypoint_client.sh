@@ -15,10 +15,4 @@ tc qdisc replace dev $NETIF root handle 1: fq limit 20480 flow_limit 10240
 
 echo "Client ready"
 
-# Iperf3 client running indefinitely, sending 1 second bursts every 5 seconds
-# towards the iperf-server container
-# --connect-timeout is in ms
-# list available TCP congestion control algorithms:
-# sysctl net.ipv4.tcp_available_congestion_control
-#  --linux-congestion cubic doesn't seem to work :(
-while true; do iperf3 -c $IPERF_SERVER_IP --time 1 --bitrate 100M --connect-timeout 3000; sleep 5; done
+/app/iperf3_exporter

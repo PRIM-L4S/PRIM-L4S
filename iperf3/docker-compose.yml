@@ -2,8 +2,8 @@ services:
   iperf-client:
     container_name: iperf-client
     build:
-      context: ./iperf3_exporter
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.client
     depends_on:
       - iperf-server
       - router
@@ -12,7 +12,6 @@ services:
     networks:
       iperf-client-net:
         ipv4_address: 172.20.1.10
-      prom-exporter-net:
   
   router:
     container_name: router
@@ -27,7 +26,6 @@ services:
         ipv4_address: 172.20.1.11
       iperf-server-net:
         ipv4_address: 172.20.2.11
-      
 
   iperf-server:
     container_name: iperf-server
@@ -39,7 +37,23 @@ services:
     networks:
       iperf-server-net:
         ipv4_address: 172.20.2.10
-      prom-exporter-net:
+
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=10y" # keep the data 10 years
+    ports:
+      - 9000:9090
+    networks:
+      iperf-client-net:
+        ipv4_address: 172.20.1.2
+
 
 networks:
   iperf-client-net:
@@ -48,11 +62,13 @@ networks:
       config:
         - subnet: 172.20.1.0/24
           gateway: 172.20.1.1
+
   iperf-server-net:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.2.0/24
           gateway: 172.20.2.1
-  prom-exporter-net:
-    driver: bridge
+
+volumes:
+  prometheus_data:
