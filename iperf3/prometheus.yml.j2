@@ -1,3 +1,5 @@
+# {{ template_generated_info }}
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -8,7 +10,7 @@ scrape_configs:
     metrics_path: /probe
     static_configs:
       - targets: # iperf3 servers
-        - 172.20.2.{{ 9 + i }}
+        - 172.20.2.{{ 10 + i }}
     params:
       port: ['5201']
       # Optional: enable reverse mode
@@ -17,7 +19,7 @@ scrape_configs:
       mode: ['both']
       # Optional: target bitrate in bits/sec (0 for unlimited)
       # (default 1 Mbit/sec for UDP, unlimited for TCP)
-      bitrate: ['100M']
+      bitrate: ['90K']
       # Optional: set test period
       # period: ['10s']
     relabel_configs:
@@ -26,5 +28,5 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: 172.20.1.{{ 9 + i }}:9579  # iperf3 client
+        replacement: 172.20.1.{{ 10 + i }}:9579  # iperf3 client
 {% endfor %}
