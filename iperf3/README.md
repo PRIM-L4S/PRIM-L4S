@@ -17,13 +17,19 @@ make install
 - Create templated files and start docker containers
 
 ```sh
-make start
+make up
 ```
 
 - Observe the logs:
 
 ```sh
 make logs
+```
+
+- Stop docker containers
+
+```sh
+make down
 ```
 
 ## Access prometheus web UI

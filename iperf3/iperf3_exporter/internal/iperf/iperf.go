@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"os/exec"
 	"regexp"
@@ -243,6 +244,15 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 	)
 
 	out, err := cmd.Output()
+
+	if ctx != nil && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		cfg.Logger.Error("iperf3 command timed out",
+			"mode", cfg.Mode.ToString(),
+			"timeout", cfg.Timeout,
+		)
+		return result
+	}
+
 	if err != nil {
 		stderrOutput := stderr.String()
 		if stderrOutput != "" {

@@ -15,7 +15,10 @@ compose-up:
 logs:
 	docker compose logs -n 5 -f
 
-start: gen-templates compose-up
+up: gen-templates compose-up
+
+down:
+	docker compose down
 
 
-.PHONY: gen-templates compose-up start logs install
+.PHONY: gen-templates compose-up up logs install down
