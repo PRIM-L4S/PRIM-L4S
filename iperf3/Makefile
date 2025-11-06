@@ -26,5 +26,7 @@ up: create-dist gen-templates compose-up
 down:
 	docker compose -f dist/docker-compose.yml down
 
+clean:
+	docker compose -f dist/docker-compose.yml down -v
 
-.PHONY: create-dist gen-templates compose-up up logs install down
+.PHONY: create-dist gen-templates compose-up up logs install down clean
