@@ -2,7 +2,7 @@
 FROM golang:1.25.3-trixie AS builder
 
 WORKDIR /go/src/github.com/edgard/iperf3_exporter
-COPY ./iperf3_exporter .
+COPY iperf3_exporter .
 
 RUN go mod download
 RUN CGO_ENABLED=0 go build -o /go/bin/iperf3_exporter ./cmd/iperf3_exporter
@@ -10,7 +10,7 @@ RUN CGO_ENABLED=0 go build -o /go/bin/iperf3_exporter ./cmd/iperf3_exporter
 # ==================== Base stage ======================
 FROM debian:13.1 AS base
 # Install iperf3 and wget for health check
-RUN apt-get update && apt-get install -y iproute2 ethtool iperf3 wget 
+RUN apt-get update && apt-get install -y iproute2 ethtool iperf3 wget
 # Add non-root user
 RUN useradd -m iperf3_exporter
 WORKDIR /app
