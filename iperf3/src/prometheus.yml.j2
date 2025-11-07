@@ -5,12 +5,14 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-{% for i in range(1, iperf3_clients_reno + iperf3_clients_prague + 1) %}
-  - job_name: 'iperf-client{{ i }}'
+{% set ns = namespace(instance_counter=1) %}
+{% for name, config_name in instances.items() %}
+{% set config = configs.get(config_name) %}
+  - job_name: '{{ name }}'
     metrics_path: /probe
     static_configs:
       - targets: # iperf3 servers
-        - 172.20.2.{{ 10 + i }}
+        - 172.20.2.{{ 10 + ns.instance_counter }}
     params:
       port: ['5201']
       # Optional: enable reverse mode
@@ -28,5 +30,6 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: 172.20.1.{{ 10 + i }}:9579  # iperf3 client
+        replacement: 172.20.1.{{ 10 + ns.instance_counter }}:9579  # iperf3 client
+{% set ns.instance_counter = ns.instance_counter + 1 %}
 {% endfor %}

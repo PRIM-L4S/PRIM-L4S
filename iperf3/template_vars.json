@@ -1,5 +1,33 @@
 {
-    "iperf3_clients_reno": 0,
-    "iperf3_clients_prague": 5,
+    "configs": {
+        "reno": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=reno"
+                ]
+            }
+        },
+        "prague": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=prague"
+                ]
+            }
+        }
+    },
+    "instances": {
+        "reno1": "reno",
+        "reno2": "reno",
+        "reno3": "reno",
+        "reno4": "reno",
+        "reno5": "reno",
+        "reno6": "reno",
+        "prague1": "prague",
+        "prague2": "prague",
+        "prague3": "prague",
+        "prague4": "prague",
+        "prague5": "prague",
+        "prague6": "prague"
+    },
     "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
 }
