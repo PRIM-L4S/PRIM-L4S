@@ -5,6 +5,9 @@
                 "sysctls": [
                     "net.ipv4.tcp_congestion_control=reno"
                 ]
+            },
+            "iperf": {
+                "bitrate": "10K"
             }
         },
         "prague": {
@@ -12,6 +15,9 @@
                 "sysctls": [
                     "net.ipv4.tcp_congestion_control=prague"
                 ]
+            },
+            "iperf": {
+                "bitrate": "10K"
             }
         }
     },

@@ -21,7 +21,7 @@ scrape_configs:
       mode: ['tcp']
       # Optional: target bitrate in bits/sec (0 for unlimited)
       # (default 1 Mbit/sec for UDP, unlimited for TCP)
-      bitrate: ['10K']
+      bitrate: ['{{ config.iperf.bitrate }}']
       # Optional: set test period
       # period: ['10s']
     relabel_configs:
