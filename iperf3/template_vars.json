@@ -1,4 +1,5 @@
 {
-    "number_iperf3_clients": 3,
+    "iperf3_clients_reno": 0,
+    "iperf3_clients_prague": 5,
     "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
 }

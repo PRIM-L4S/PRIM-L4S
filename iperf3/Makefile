@@ -19,7 +19,7 @@ compose-up:
 	docker compose -f dist/docker-compose.yml up --build -d
 
 logs:
-	docker compose logs -n 5 -f
+	docker compose -f dist/docker-compose.yml logs -n 5 -f
 
 up: create-dist gen-templates compose-up
 

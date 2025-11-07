@@ -1,9 +1,11 @@
 # {{ template_generated_info }}
 
 services:
-{% for i in range(1, number_iperf3_clients + 1) %}
-  iperf-client{{ i }}:
-    container_name: iperf-client{{ i }}
+{% set ns = namespace(instance_counter=1) %}
+
+{% for _ in range(iperf3_clients_reno) %}
+  iperf-client{{ ns.instance_counter }}:
+    container_name: iperf-client{{ ns.instance_counter }}
     build:
       context: .
       dockerfile: Dockerfile.client
@@ -13,10 +15,12 @@ services:
       - NET_ADMIN
     networks:
       iperf-client-net:
-        ipv4_address: 172.20.1.{{ 10 + i }}
+        ipv4_address: 172.20.1.{{ 10 + ns.instance_counter }}
+    depends_on:
+      - iperf-server{{ ns.instance_counter }}
 
-  iperf-server{{ i }}:
-    container_name: iperf-server{{ i }}
+  iperf-server{{ ns.instance_counter }}:
+    container_name: iperf-server{{ ns.instance_counter }}
     build:
       context: .
       dockerfile: Dockerfile.server
@@ -24,7 +28,35 @@ services:
       - NET_ADMIN
     networks:
       iperf-server-net:
-        ipv4_address: 172.20.2.{{ 10 + i }}
+        ipv4_address: 172.20.2.{{ 10 + ns.instance_counter }}
+{% set ns.instance_counter = ns.instance_counter + 1 %}
+{% endfor %}
+
+{% for _ in range(iperf3_clients_prague) %}
+  iperf-client{{ ns.instance_counter }}:
+    container_name: iperf-client{{ ns.instance_counter }}
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    sysctls:
+      - net.ipv4.tcp_congestion_control=prague
+    cap_add:
+      - NET_ADMIN
+    networks:
+      iperf-client-net:
+        ipv4_address: 172.20.1.{{ 10 + ns.instance_counter }}
+
+  iperf-server{{ ns.instance_counter }}:
+    container_name: iperf-server{{ ns.instance_counter }}
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    cap_add:
+      - NET_ADMIN
+    networks:
+      iperf-server-net:
+        ipv4_address: 172.20.2.{{ 10 + ns.instance_counter }}
+{% set ns.instance_counter = ns.instance_counter + 1 %}
 {% endfor %}
 
   router:

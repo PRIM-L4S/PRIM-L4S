@@ -5,7 +5,7 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-{% for i in range(1, number_iperf3_clients + 1) %}
+{% for i in range(1, iperf3_clients_reno + iperf3_clients_prague + 1) %}
   - job_name: 'iperf-client{{ i }}'
     metrics_path: /probe
     static_configs:
@@ -16,10 +16,10 @@ scrape_configs:
       # Optional: enable reverse mode
       # reverse_mode: ['true']
       # Half TCP and half UDP tests
-      mode: ['both']
+      mode: ['tcp']
       # Optional: target bitrate in bits/sec (0 for unlimited)
       # (default 1 Mbit/sec for UDP, unlimited for TCP)
-      bitrate: ['90K']
+      bitrate: ['10K']
       # Optional: set test period
       # period: ['10s']
     relabel_configs:
