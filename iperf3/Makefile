@@ -1,3 +1,4 @@
+all: list
 
 install:
 	sudo apt install python3.12-venv
@@ -12,9 +13,9 @@ create-dist:
 
 gen-templates:
 	. .venv/bin/activate; \
-	jinja2 dist/entrypoint_router.sh.j2 template_vars.json > dist/entrypoint_router.sh; \
-	jinja2 dist/prometheus.yml.j2 template_vars.json > dist/prometheus.yml; \
-	jinja2 dist/docker-compose.yml.j2 template_vars.json > dist/docker-compose.yml
+	jinja2 dist/entrypoint_router.sh.j2 scenarii/$(SCENARIO).json > dist/entrypoint_router.sh; \
+	jinja2 dist/prometheus.yml.j2 scenarii/$(SCENARIO).json > dist/prometheus.yml; \
+	jinja2 dist/docker-compose.yml.j2 scenarii/$(SCENARIO).json > dist/docker-compose.yml
 
 compose-up:
 	docker compose -f dist/docker-compose.yml up --build -d
@@ -30,4 +31,11 @@ down:
 clean:
 	docker compose -f dist/docker-compose.yml down -v
 
-.PHONY: create-dist gen-templates compose-up up logs install down clean
+list: scenarii/*.json
+	@echo "Usage: make up SCENARIO=<name>"
+
+scenarii/*.json:
+	@echo -n $(basename $(notdir $@))" "
+	@cat $@ | jq ".description"
+
+.PHONY: create-dist gen-templates compose-up up logs install down clean all list scenarii/*.json
