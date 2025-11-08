@@ -12,6 +12,7 @@ create-dist:
 
 gen-templates:
 	. .venv/bin/activate; \
+	jinja2 dist/entrypoint_router.sh.j2 template_vars.json > dist/entrypoint_router.sh; \
 	jinja2 dist/prometheus.yml.j2 template_vars.json > dist/prometheus.yml; \
 	jinja2 dist/docker-compose.yml.j2 template_vars.json > dist/docker-compose.yml
 

@@ -18,17 +18,19 @@ echo "Router ready"
 # Make the change easily visible on Wireshark
 # ping -c 1 1.1.1.1 > /dev/null
 
+{% if router.max_bandwidth %}
 # Add bandwidth limiting to DUALPI2 - limit forwarded traffic to 1kbit
 # Remove the old qdiscs and add new ones with bandwidth control
 tc qdisc del dev $NETIF0 root
 tc qdisc del dev $NETIF1 root
 
 # TBF for bandwidth limiting + DUALPI2 for AQM
-tc qdisc add dev $NETIF0 root handle 1: tbf rate 100kbit burst 32kbit latency 400ms
+tc qdisc add dev $NETIF0 root handle 1: tbf rate {{ router.max_bandwidth }} burst 32kbit latency 400ms
 tc qdisc add dev $NETIF0 parent 1:1 handle 10: dualpi2
 
-tc qdisc add dev $NETIF1 root handle 2: tbf rate 100kbit burst 32kbit latency 400ms
+tc qdisc add dev $NETIF1 root handle 2: tbf rate {{ router.max_bandwidth }} burst 32kbit latency 400ms
 tc qdisc add dev $NETIF1 parent 2:1 handle 20: dualpi2
+{% endif %}
 
 echo "Router bandwidth limited to 100 kbit/s"
 

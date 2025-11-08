@@ -7,7 +7,7 @@
                 ]
             },
             "iperf": {
-                "bitrate": "10K"
+                "bitrate": "0"
             }
         },
         "prague": {
@@ -17,7 +17,7 @@
                 ]
             },
             "iperf": {
-                "bitrate": "10K"
+                "bitrate": "0"
             }
         }
     },
@@ -28,12 +28,14 @@
         "reno4": "reno",
         "reno5": "reno",
         "reno6": "reno",
+        "reno7": "reno",
+        "reno8": "reno",
         "prague1": "prague",
         "prague2": "prague",
-        "prague3": "prague",
-        "prague4": "prague",
-        "prague5": "prague",
-        "prague6": "prague"
+        "prague3": "prague"
+    },
+    "router": {
+        "max_bandwidth": null
     },
     "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
 }
