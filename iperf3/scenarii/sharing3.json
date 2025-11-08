@@ -1,0 +1,36 @@
+{
+    "description": "5 prague clients share a common 5 mbit link. No iperf limit.",
+    "configs": {
+        "reno": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=reno"
+                ]
+            },
+            "iperf": {
+                "bitrate": "0"
+            }
+        },
+        "prague": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=prague"
+                ]
+            },
+            "iperf": {
+                "bitrate": "0"
+            }
+        }
+    },
+    "instances": {
+        "prague1": "prague",
+        "prague2": "prague",
+        "prague3": "prague",
+        "prague4": "prague",
+        "prague5": "prague"
+    },
+    "router": {
+        "max_bandwidth": "5mbit"
+    },
+    "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
+}
