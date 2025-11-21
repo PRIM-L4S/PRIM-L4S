@@ -1,0 +1,3 @@
+[submodule "l4sdemo/l4sdemo"]
+	path = l4sdemo/l4sdemo
+	url = git@github.com:L4STeam/l4sdemo.git

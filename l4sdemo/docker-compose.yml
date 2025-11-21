@@ -1,0 +1,108 @@
+services:
+  router:
+    image: qemux/qemu
+    container_name: l4sdemo-router
+    ports:
+      - 2202:22
+    volumes:
+      - ./router.qcow2:/boot.qcow2
+      - ls4demo-router-storage:/storage
+    networks:
+      l4sdemo-client-net:
+        ipv4_address: 192.168.1.2
+      l4sdemo-server-net:
+        ipv4_address: 192.168.2.2
+    cap_add:
+      - NET_ADMIN
+    devices:
+      # - /dev/kvm
+      - /dev/net/tun
+
+  clientA:
+    image: qemux/qemu
+    container_name: l4sdemo-clientA
+    ports:
+      - 2213:22
+    volumes:
+      - ./clientA.qcow2:/boot.qcow2
+      - ls4demo-clientA-storage:/storage
+    networks:
+      l4sdemo-client-net:
+        ipv4_address: 192.168.1.3
+    cap_add:
+      - NET_ADMIN
+    devices:
+      # - /dev/kvm
+      - /dev/net/tun
+
+  clientB:
+    image: qemux/qemu
+    container_name: l4sdemo-clientB
+    ports:
+      - 2214:22
+    volumes:
+      - ./clientB.qcow2:/boot.qcow2
+      - ls4demo-clientB-storage:/storage
+    networks:
+      l4sdemo-client-net:
+        ipv4_address: 192.168.1.4
+    cap_add:
+      - NET_ADMIN
+    devices:
+      # - /dev/kvm
+      - /dev/net/tun
+
+  serverA:
+    image: qemux/qemu
+    container_name: l4sdemo-serverA
+    ports:
+      - 2223:22
+    volumes:
+      - ./serverA.qcow2:/boot.qcow2
+      - ls4demo-serverA-storage:/storage
+    networks:
+      l4sdemo-server-net:
+        ipv4_address: 192.168.2.3
+    cap_add:
+      - NET_ADMIN
+    devices:
+      # - /dev/kvm
+      - /dev/net/tun
+
+  serverB:
+    image: qemux/qemu
+    container_name: l4sdemo-serverB
+    ports:
+      - 2224:22
+    volumes:
+      - ./serverB.qcow2:/boot.qcow2
+      - ls4demo-serverB-storage:/storage
+    networks:
+      l4sdemo-server-net:
+        ipv4_address: 192.168.2.4
+    cap_add:
+      - NET_ADMIN
+    devices:
+      # - /dev/kvm
+      - /dev/net/tun
+
+networks:
+  l4sdemo-client-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1
+  l4sdemo-server-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.2.0/24
+          gateway: 192.168.2.1
+
+volumes:
+  ls4demo-router-storage:
+  ls4demo-clientA-storage:
+  ls4demo-clientB-storage:
+  ls4demo-serverA-storage:
+  ls4demo-serverB-storage:
