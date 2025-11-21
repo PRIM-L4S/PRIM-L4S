@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y iproute2 ethtool iptables iputils-ping
 COPY entrypoint_router.sh /root/entrypoint_router.sh
 RUN chmod +x /root/entrypoint_router.sh
 
+# Copy the node_exporter binary into the container
+COPY node_exporter/node_exporter /usr/local/bin/node_exporter
+
 # Set the entrypoint to the script
 WORKDIR /root
 ENTRYPOINT ["sh", "-c", "./entrypoint_router.sh"]

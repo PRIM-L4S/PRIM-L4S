@@ -10,6 +10,7 @@ create-dist:
 	mkdir dist
 	cp src/* dist/
 	cp -r iperf3_exporter dist/
+	cp -r node_exporter dist/
 
 gen-templates:
 	. .venv/bin/activate; \

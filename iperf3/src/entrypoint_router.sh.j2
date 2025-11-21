@@ -34,4 +34,5 @@ tc qdisc add dev $NETIF1 parent 2:1 handle 20: dualpi2
 
 echo "Router bandwidth limited to 100 kbit/s"
 
-tail -f /dev/null
+# Start node_exporter with qdisc collector enabled
+node_exporter --collector.disable-defaults --collector.qdisc

@@ -5,6 +5,12 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+  # node exporter (on router)
+  - job_name: node
+    static_configs:
+    - targets: ['router:9100']
+
+  # iperf3 exporter (on clients)
 {% set ns = namespace(instance_counter=1) %}
 {% for name, config_name in instances.items() %}
 {% set config = configs.get(config_name) %}
