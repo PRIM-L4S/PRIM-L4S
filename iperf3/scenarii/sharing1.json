@@ -27,7 +27,8 @@
         "prague1": "prague"
     },
     "router": {
-        "max_bandwidth": "1mbit"
+        "max_bandwidth": "1mbit",
+        "delay_config": "10ms 1ms"
     },
     "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
 }
