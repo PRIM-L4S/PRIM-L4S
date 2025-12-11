@@ -1,5 +1,10 @@
 sudo modprobe sch_dualpi2
 sudo modprobe tcp_prague
+sudo modprobe tcp_bbr
+
+echo "sch_dualpi2" | sudo tee /etc/modules-load.d/dualpi2.conf
+echo "tcp_prague" | sudo tee /etc/modules-load.d/prague.conf
+echo "tcp_bbr" | sudo tee /etc/modules-load.d/bbr.conf
 
 # TODO?
 # some preparations for having better paced traffic and reduce bursts for each network interface $NETIF that sends L4S traffic
