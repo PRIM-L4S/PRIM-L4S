@@ -2,7 +2,9 @@
 
 global:
   scrape_interval: 15s
-  evaluation_interval: 15s
+#    This is not supported in VictoriaMetrics
+#    TODO: Replace with appropriate VictoriaMetrics settings
+#   evaluation_interval: 15s
 
 scrape_configs:
   # node exporter (on router)
