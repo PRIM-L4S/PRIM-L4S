@@ -52,6 +52,7 @@ services:
       - "-storageDataPath=/victoria-metrics-data"
       - "-retentionPeriod=100y"  # keep the data 100 years
       - "-promscrape.config=/etc/victoria-metrics/prometheus.yml"
+      - "-search.cacheTimestampOffset=1h" # This is required as we use backdated timestamps for bulk inserts
     volumes:
       - ./prometheus.yml:/etc/victoria-metrics/prometheus.yml
       - victoria_data:/victoria-metrics-data

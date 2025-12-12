@@ -1,7 +1,7 @@
 # Moving to Victoria notes and todo
 
 - We should set `-retentionPeriod=100y`
-- We might want to take a look at: https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/#downsampling
+- We might want to take a look at: https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/#downsampling. Actually, it seems to be a entreprise only feature, so it's probably not activated by default.
 
 Euuuh certaines features sont payantes ??
 
