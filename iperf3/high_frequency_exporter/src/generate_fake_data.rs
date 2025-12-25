@@ -10,7 +10,7 @@ const NUM_SAMPLES: u64 = 1000;
 pub fn generate_fake_metrics() -> Vec<MetricDataFormat> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("Time should go forward");
+        .expect("The system time is before the UNIX EPOCH");
 
     let mut metric1 = MetricDataFormat::new("test_sinus", "value1", "value2");
     let mut metric2 = MetricDataFormat::new("test_cosinus", "value2", "value2");
