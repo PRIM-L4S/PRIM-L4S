@@ -1,6 +1,7 @@
-use crate::{VictoriaMetricsFormatting, data_format::MetricDataFormat};
+use metric_data_store::MetricDataFormat;
+use metric_data_store_derive::ToImportFormat;
 
-#[derive(VictoriaMetricsFormatting, Debug)]
+#[derive(ToImportFormat, Debug)]
 pub struct MetricDataStore {
     cwnd: MetricDataFormat,
     bytes_sent: MetricDataFormat,
