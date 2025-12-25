@@ -1,4 +1,8 @@
+use proc_macro::TokenStream;
+use proc_macro_error::abort;
+use quote::quote;
 use serde::{Deserialize, Serialize};
+use syn::{DeriveInput, Field, parse_macro_input};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MetricDataFormat {
@@ -43,16 +47,64 @@ pub trait VictoriaMetricsFormat {
     fn to_import_format(&self) -> String;
 }
 
-impl VictoriaMetricsFormat for Vec<MetricDataFormat> {
-    fn to_import_format(&self) -> String {
-        let mut result = String::new();
+pub fn victoria_metrics_formatting_derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let ident = &input.ident;
 
-        for metric_data in self {
-            let data_json = serde_json::to_string(metric_data).unwrap();
+    let syn::Data::Struct(data) = &input.data else {
+        abort!(input, "This derive macro can only be applied on structs");
+    };
+
+    // Validate fields type
+    for field in &data.fields {
+        let field_type = &field.ty;
+        let is_metric_data_format = match field_type {
+            syn::Type::Path(type_path) => type_path
+                .path
+                .segments
+                .last()
+                .map_or(false, |segment| segment.ident == "MetricDataFormat"),
+            _ => false,
+        };
+
+        if !is_metric_data_format {
+            abort!(field, "All fields must be of type MetricDataFormat");
+        }
+    }
+
+    let new_fields = data.fields.iter().map(|field| {
+        let field_name = &field.ident;
+        quote! {
+            #field_name: MetricDataFormat::new(stringify!(#field_name), "value1", "value2"),
+        }
+    });
+
+    let extract_data_from_fields = data.fields.iter().map(|field| {
+        let field_name = &field.ident;
+        quote! {
+            let data_json = serde_json::to_string(&self.#field_name).unwrap();
             result.push_str(&data_json);
             result.push('\n');
         }
+    });
 
-        result
+    quote! {
+    impl #ident {
+        pub fn new() -> Self {
+            #ident {
+                #(#new_fields)*
+            }
+        }
     }
+
+    impl VictoriaMetricsFormat for #ident {
+        fn to_import_format(&self) -> String {
+            let mut result = String::new();
+
+            #(#extract_data_from_fields)*
+
+            result
+        }
+    }}
+    .into()
 }

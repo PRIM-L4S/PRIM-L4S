@@ -1,11 +1,6 @@
 use clap::Parser;
 use eyre::Result;
 
-use crate::data_format::VictoriaMetricsFormat;
-
-mod data_format;
-mod generate_fake_data;
-
 #[derive(Parser)]
 #[clap(version, author, about)]
 struct AppArgs {
