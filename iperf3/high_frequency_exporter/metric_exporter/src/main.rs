@@ -1,8 +1,12 @@
+use std::sync::{Arc, Mutex};
+
 use clap::Parser;
 use eyre::Result;
+use tokio::join;
 
 use crate::data_store::MetricDataStore;
 
+mod constants;
 mod data_store;
 mod loop_gathering;
 mod loop_sending;
@@ -25,9 +29,12 @@ async fn main() -> Result<()> {
 
     let args = AppArgs::parse();
 
-    let data_store = MetricDataStore::new();
+    let data_store = Arc::new(Mutex::new(MetricDataStore::new()));
 
-    println!("Generated data store:\n{:#?}", data_store);
+    join!(
+        loop_sending::loop_sending(data_store.clone()),
+        loop_gathering::loop_gathering(data_store),
+    );
 
     Ok(())
 

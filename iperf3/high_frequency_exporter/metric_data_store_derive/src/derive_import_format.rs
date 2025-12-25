@@ -44,6 +44,13 @@ pub fn to_import_format_derive(input: TokenStream) -> TokenStream {
         }
     });
 
+    let clear_fields = data.fields.iter().map(|field| {
+        let field_name = &field.ident;
+        quote! {
+            self.#field_name.clear();
+        }
+    });
+
     quote! {
 
     impl #ident {
@@ -61,6 +68,10 @@ pub fn to_import_format_derive(input: TokenStream) -> TokenStream {
             #(#extract_data_from_fields)*
 
             result
+        }
+
+        fn clear(&mut self) {
+            #(#clear_fields)*
         }
     }}
     .into()

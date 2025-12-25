@@ -33,11 +33,18 @@ impl MetricDataFormat {
             return;
         }
 
-        self.values.push(value);
         self.timestamps.push(timestamp);
+        self.values.push(value);
+    }
+
+    pub fn clear(&mut self) {
+        self.timestamps.clear();
+        self.values.clear();
     }
 }
 
 pub trait MetricDataToImport {
     fn to_import_format(&self) -> String;
+
+    fn clear(&mut self);
 }
