@@ -12,6 +12,9 @@ services:
     sysctls: {{ config.docker.sysctls }}
     cap_add:
       - NET_ADMIN
+    env:
+      # Just used to set a fancy label in the exporter
+      - HFE_HOST={{ name }}
     networks:
       iperf-client-net:
         ipv4_address: 172.20.1.{{ 10 + ns.instance_counter }}

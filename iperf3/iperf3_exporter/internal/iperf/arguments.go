@@ -4,6 +4,10 @@ import "strconv"
 
 func (cfg *Config) generateIperfArgs() []string {
 	iperfArgs := []string{
+		// This cport is hardcoded so that high_frequency_exporter
+		// knows which socket to listen to
+		// Hopefully this doesnt cause "address already in use" errors
+		"--cport 4444",
 		"-J",
 		"-t", strconv.FormatFloat(cfg.Period.Seconds(), 'f', 0, 64),
 		"-c", cfg.Target,

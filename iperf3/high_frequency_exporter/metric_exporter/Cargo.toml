@@ -1,5 +1,5 @@
 [package]
-name = "metric_exporter"
+name = "high_frequency_exporter"
 version = "0.1.0"
 edition = "2024"
 authors = ["Thomas Sauvage", "Emre Ucar", "Timothée Fisher"]
