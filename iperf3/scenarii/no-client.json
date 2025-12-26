@@ -1,0 +1,7 @@
+{
+    "description": "Doesn't run any iperf3 client. Useful to access the stored metrics without generating traffic.",
+    "configs": {},
+    "instances": {},
+    "router": {},
+    "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
+}
