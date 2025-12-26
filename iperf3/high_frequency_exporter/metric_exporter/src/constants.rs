@@ -2,4 +2,4 @@
 pub const INTERVAL_SENDING: u64 = 10_000_000; // 10 s
 
 /// Interval (in µs) between gathering metric data
-pub const INTERVAL_GATHERING: u64 = 100_000; // 100 ms
+pub const INTERVAL_GATHERING: u64 = 1_000; // 1 ms

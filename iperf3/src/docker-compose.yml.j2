@@ -12,7 +12,7 @@ services:
     sysctls: {{ config.docker.sysctls }}
     cap_add:
       - NET_ADMIN
-    env:
+    environment:
       # Just used to set a fancy label in the exporter
       - HFE_HOST={{ name }}
     networks:
