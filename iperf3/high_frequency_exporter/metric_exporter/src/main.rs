@@ -10,6 +10,7 @@ mod constants;
 mod data_store;
 mod loop_gathering;
 mod loop_sending;
+mod socket_statistics;
 
 #[derive(Parser)]
 #[clap(version, author, about)]
@@ -21,6 +22,16 @@ struct AppArgs {
     ///
     /// Example: http://victoriametrics:8428
     victoria_server_url: String,
+
+    #[clap(long)]
+    /// Port number of the sending address from the studied socket
+    /// If studying iperf3, this can be set with the `--cport` argument
+    sender_port: u16,
+
+    #[clap(long)]
+    /// Port number of the receiving address from the studied socket
+    /// If studying iperf3, this is the default port
+    destination_port: u16,
 }
 
 #[tokio::main]
@@ -33,7 +44,7 @@ async fn main() -> Result<()> {
 
     join!(
         loop_sending::loop_sending(data_store.clone()),
-        loop_gathering::loop_gathering(data_store),
+        loop_gathering::loop_gathering(data_store, args.sender_port, args.destination_port),
     );
 
     Ok(())

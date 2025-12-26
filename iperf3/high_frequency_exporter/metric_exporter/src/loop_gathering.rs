@@ -1,30 +1,46 @@
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use tokio::time::sleep;
+
+use crate::socket_statistics::get_socket_statistics;
 use crate::{constants::INTERVAL_GATHERING, data_store::MetricDataStore};
 
-pub async fn loop_gathering(data_storage: Arc<Mutex<MetricDataStore>>) {
-    let mut fake_cwnd_value = 0;
+pub async fn loop_gathering(
+    data_storage: Arc<Mutex<MetricDataStore>>,
+    sender_port: u16,
+    destination_port: u16,
+) {
+    let mut fake_value = 0;
 
     loop {
-        // TODO: Implement the actual gathering logic here
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("The system time is before the UNIX EPOCH")
             .as_millis();
 
-        let mut storage = data_storage.lock().unwrap();
+        let socket_stats = get_socket_statistics(sender_port, destination_port).await;
 
-        storage.cwnd.push(now, fake_cwnd_value);
-        storage.bytes_received.push(now, 100 + fake_cwnd_value);
-        storage.bytes_sent.push(now, 200 + fake_cwnd_value);
+        match socket_stats {
+            Ok(stats) => {
+                println!(" > Gathered socket statistics\n{:#?}", stats);
 
-        println!("Gathered new data point for cwnd at {}", now);
+                // TODO: Replace with actual gathered values
+                let mut storage = data_storage.lock().unwrap();
 
-        drop(storage);
+                storage.cwnd.push(now, fake_value);
+                storage.bytes_received.push(now, 100 + fake_value);
+                storage.bytes_sent.push(now, 200 + fake_value);
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(INTERVAL_GATHERING)).await;
+                drop(storage);
+            }
+            Err(err) => {
+                println!(" > Socket statistics failed: {}", err);
+            }
+        }
 
-        fake_cwnd_value += 1;
+        sleep(Duration::from_secs(INTERVAL_GATHERING)).await;
+
+        fake_value += 1;
     }
 }
