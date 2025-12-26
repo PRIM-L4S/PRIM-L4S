@@ -4,12 +4,28 @@ use tokio::process::Command;
 
 #[derive(Debug)]
 pub struct SocketStatistics {
-    sender_address: String,
-    destination_address: String,
-    state: String,
-    recv_q: u64,
-    send_q: u64,
-    statistics: HashMap<String, String>,
+    // Could easily be added, but not needed for now
+
+    // pub sender_address: String,
+    // pub destination_address: String,
+    // pub state: String,
+    pub recv_q: u64,
+    pub send_q: u64,
+    pub statistics: HashMap<String, String>,
+}
+
+impl SocketStatistics {
+    pub fn get_u64_statistic(&self, key: &str) -> Result<u64, SockStatError> {
+        match self.statistics.get(key) {
+            Some(value_str) => value_str
+                .parse::<u64>()
+                .map_err(|op: ParseIntError| SockStatError::Other(eyre::eyre!(op))),
+            None => Err(SockStatError::ParsingError(format!(
+                "Statistic '{}' not found",
+                key
+            ))),
+        }
+    }
 }
 
 pub enum SockStatError {
@@ -51,10 +67,7 @@ pub async fn get_socket_statistics(
         .await
         .map_err(|err| SockStatError::Other(err.into()))?;
 
-    println!("==== Result of command ====");
-
     let output = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    println!("Raw output: {}", output);
 
     if output.is_empty() {
         return Err(SockStatError::NoMatchingSocket);
@@ -65,8 +78,6 @@ pub async fn get_socket_statistics(
     }
 
     let parts: Vec<&str> = output.split_whitespace().collect();
-
-    println!("Parsed parts: {:?}", parts);
 
     if parts.len() < 5 {
         return Err(SockStatError::ParsingError(
@@ -85,9 +96,9 @@ pub async fn get_socket_statistics(
     }
 
     Ok(SocketStatistics {
-        sender_address: parts[3].to_string(),
-        destination_address: parts[4].to_string(),
-        state: parts[0].to_string(),
+        // sender_address: parts[3].to_string(),
+        // destination_address: parts[4].to_string(),
+        // state: parts[0].to_string(),
         recv_q: parts[1]
             .parse()
             .map_err(|op: ParseIntError| SockStatError::Other(eyre::eyre!(op)))?,

@@ -12,12 +12,12 @@ pub async fn loop_sending(data_storage: Arc<Mutex<MetricDataStore>>) {
     loop {
         // TODO: Implement the actual sending logic here
         let mut storage = data_storage.lock().unwrap();
-        println!("Data that would have been sent: {:#?}", *storage);
+        println!("Data that would have been sent:\n{:#?}", *storage);
 
         // After sending, we empty the stored data
         storage.clear();
         drop(storage);
 
-        sleep(Duration::from_secs(INTERVAL_SENDING)).await;
+        sleep(Duration::from_micros(INTERVAL_SENDING)).await;
     }
 }

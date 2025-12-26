@@ -32,6 +32,11 @@ struct AppArgs {
     /// Port number of the receiving address from the studied socket
     /// If studying iperf3, this is the default port
     destination_port: u16,
+
+    #[clap(long)]
+    /// PName of the client
+    /// Added as a label for the exported metrics
+    host: String,
 }
 
 #[tokio::main]
@@ -40,7 +45,7 @@ async fn main() -> Result<()> {
 
     let args = AppArgs::parse();
 
-    let data_store = Arc::new(Mutex::new(MetricDataStore::new()));
+    let data_store = Arc::new(Mutex::new(MetricDataStore::new(args.host)));
 
     join!(
         loop_sending::loop_sending(data_store.clone()),

@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use tokio::time::sleep;
 
-use crate::socket_statistics::get_socket_statistics;
+use crate::socket_statistics::{SockStatError, get_socket_statistics};
 use crate::{constants::INTERVAL_GATHERING, data_store::MetricDataStore};
 
 pub async fn loop_gathering(
@@ -11,8 +11,6 @@ pub async fn loop_gathering(
     sender_port: u16,
     destination_port: u16,
 ) {
-    let mut fake_value = 0;
-
     loop {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -23,24 +21,29 @@ pub async fn loop_gathering(
 
         match socket_stats {
             Ok(stats) => {
-                println!(" > Gathered socket statistics\n{:#?}", stats);
-
-                // TODO: Replace with actual gathered values
                 let mut storage = data_storage.lock().unwrap();
 
-                storage.cwnd.push(now, fake_value);
-                storage.bytes_received.push(now, 100 + fake_value);
-                storage.bytes_sent.push(now, 200 + fake_value);
+                match stats.get_u64_statistic("cwnd") {
+                    Ok(cwnd) => storage.cwnd.push(now, cwnd),
+                    Err(err) => println!(" > Socket statistics failed (cwnd): {}", err),
+                }
+
+                match stats.get_u64_statistic("bytes_sent") {
+                    Ok(bytes_sent) => storage.bytes_sent.push(now, bytes_sent),
+                    Err(err) => println!(" > Socket statistics failed (bytes_sent): {}", err),
+                }
 
                 drop(storage);
             }
+            // This one is expected between measurements
+            // We skip siliently to avoid cluttering the output
+            // (that's high frequency)
+            Err(SockStatError::NoMatchingSocket) => (),
             Err(err) => {
                 println!(" > Socket statistics failed: {}", err);
             }
         }
 
-        sleep(Duration::from_secs(INTERVAL_GATHERING)).await;
-
-        fake_value += 1;
+        sleep(Duration::from_micros(INTERVAL_GATHERING)).await;
     }
 }

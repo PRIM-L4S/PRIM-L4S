@@ -1,5 +1,5 @@
-/// Interval (in seconds) between sending metric data to the server
-pub const INTERVAL_SENDING: u64 = 3;
+/// Interval (in µs) between sending metric data to the server
+pub const INTERVAL_SENDING: u64 = 10_000_000; // 10 s
 
-/// Interval (in seconds) between gathering metric data
-pub const INTERVAL_GATHERING: u64 = 1;
+/// Interval (in µs) between gathering metric data
+pub const INTERVAL_GATHERING: u64 = 100_000; // 100 ms

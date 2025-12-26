@@ -5,5 +5,4 @@ use metric_data_store_derive::ToImportFormat;
 pub struct MetricDataStore {
     pub cwnd: MetricDataFormat,
     pub bytes_sent: MetricDataFormat,
-    pub bytes_received: MetricDataFormat,
 }
