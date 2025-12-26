@@ -33,6 +33,9 @@ pub async fn loop_gathering(
                     Err(err) => println!(" > Socket statistics failed (bytes_sent): {}", err),
                 }
 
+                storage.recv_q.push(now, stats.recv_q);
+                storage.send_q.push(now, stats.send_q);
+
                 drop(storage);
             }
             // This one is expected between measurements

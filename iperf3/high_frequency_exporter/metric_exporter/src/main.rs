@@ -16,12 +16,12 @@ mod socket_statistics;
 #[clap(version, author, about)]
 struct AppArgs {
     #[clap(long)]
-    /// The URL of the Victoria Metrics server to which metrics will be sent.
+    /// The URL of the metrics server to which metrics will be sent.
     /// Should include the protocol (http:// or https://).
     /// Should NOT include the trailing slash.
     ///
-    /// Example: http://victoriametrics:8428
-    victoria_server_url: String,
+    /// Example: http://metrics-server:8428
+    metric_server_url: String,
 
     #[clap(long)]
     /// Port number of the sending address from the studied socket
@@ -48,27 +48,9 @@ async fn main() -> Result<()> {
     let data_store = Arc::new(Mutex::new(MetricDataStore::new(args.host)));
 
     join!(
-        loop_sending::loop_sending(data_store.clone()),
+        loop_sending::loop_sending(data_store.clone(), &args.metric_server_url),
         loop_gathering::loop_gathering(data_store, args.sender_port, args.destination_port),
     );
 
     Ok(())
-
-    // let http_client = reqwest::Client::new();
-
-    // let data = generate_fake_data::generate_fake_metrics();
-    // let formatted_data = data.to_import_format();
-
-    // let res = http_client
-    //     .post(format!("{}/api/v1/import", args.victoria_server_url))
-    //     .body(formatted_data)
-    //     .send()
-    //     .await?;
-
-    // println!("Status: {}", res.status());
-    // println!("Headers:\n{:#?}", res.headers());
-
-    // let body = res.text().await?;
-    // println!("Body:\n{}", body);
-    // Ok(())
 }

@@ -8,15 +8,36 @@ use tokio::time::sleep;
 
 use crate::{constants::INTERVAL_SENDING, data_store::MetricDataStore};
 
-pub async fn loop_sending(data_storage: Arc<Mutex<MetricDataStore>>) {
-    loop {
-        // TODO: Implement the actual sending logic here
-        let mut storage = data_storage.lock().unwrap();
-        println!("Data that would have been sent:\n{:#?}", *storage);
+pub async fn loop_sending(data_storage: Arc<Mutex<MetricDataStore>>, metric_server_url: &str) {
+    let http_client = reqwest::Client::new();
+    let api_url = format!("{}/api/v1/import", metric_server_url);
 
-        // After sending, we empty the stored data
+    loop {
+        let mut storage = data_storage.lock().unwrap();
+        let formatted_data = storage.to_import_format();
+        // We clear the storage regardless of the sending result
+        // This can cause data loss, but also prevents data buildup
+        // so that's a trade-off we accept here
         storage.clear();
         drop(storage);
+
+        match http_client.post(&api_url).body(formatted_data).send().await {
+            Err(err) => {
+                println!(
+                    " > Failed to send metrics: {}. Tip: the url might be incorrect or the server is unreachable.",
+                    err
+                );
+            }
+            Ok(res) => {
+                if !res.status().is_success() {
+                    println!(
+                        "Failed to send metrics, server responded with status: {}",
+                        res.status()
+                    );
+                    continue;
+                }
+            }
+        }
 
         sleep(Duration::from_micros(INTERVAL_SENDING)).await;
     }
