@@ -1,5 +1,5 @@
 {
-    "description": "1 reno client and 1 prague client share a common 1 mbit link. No iperf limit.",
+    "description": "2 reno clients share a common slow 1 mbit link. No iperf limit.",
     "configs": {
         "reno": {
             "docker": {
@@ -10,25 +10,15 @@
             "iperf": {
                 "bitrate": "0"
             }
-        },
-        "prague": {
-            "docker": {
-                "sysctls": [
-                    "net.ipv4.tcp_congestion_control=prague"
-                ]
-            },
-            "iperf": {
-                "bitrate": "0"
-            }
         }
     },
     "instances": {
         "reno1": "reno",
-        "prague1": "prague"
+        "reno2": "reno"
     },
     "router": {
         "max_bandwidth": "1mbit",
-        "delay_config": "10ms 1ms"
+        "delay_config": "300ms 100ms"
     },
     "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
 }
