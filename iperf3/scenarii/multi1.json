@@ -1,0 +1,60 @@
+{
+    "description": "2 clients of each type: reno, prague, cubic, and bbr, sharing a common 5 mbit link. No iperf limit.",
+    "configs": {
+        "reno": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=reno"
+                ]
+            },
+            "iperf": {
+                "bitrate": "0"
+            }
+        },
+        "prague": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=prague"
+                ]
+            },
+            "iperf": {
+                "bitrate": "0"
+            }
+        },
+        "cubic": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=cubic"
+                ]
+            },
+            "iperf": {
+                "bitrate": "0"
+            }
+        },
+        "bbr": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=bbr"
+                ]
+            },
+            "iperf": {
+                "bitrate": "0"
+            }
+        }
+    },
+    "instances": {
+        "reno1": "reno",
+        "reno2": "reno",
+        "prague1": "prague",
+        "prague2": "prague",
+        "cubic1": "cubic",
+        "cubic2": "cubic",
+        "bbr1": "bbr",
+        "bbr2": "bbr"
+    },
+    "router": {
+        "max_bandwidth": "5mbit",
+        "delay_config": "10ms 1ms"
+    },
+    "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
+}
