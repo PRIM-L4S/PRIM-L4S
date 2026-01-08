@@ -14,4 +14,9 @@ tc qdisc replace dev $NETIF root handle 1: fq limit 20480 flow_limit 10240
 
 echo "Client ready"
 
+/app/high_frequency_exporter \
+    --metric-server-url http://victoriametrics:8428 \
+    --sender-port 4444 \
+    --destination-port 5201 &
+
 /app/iperf3_exporter

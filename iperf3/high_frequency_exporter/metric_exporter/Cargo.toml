@@ -1,0 +1,16 @@
+[package]
+name = "high_frequency_exporter"
+version = "0.1.0"
+edition = "2024"
+authors = ["Thomas Sauvage", "Emre Ucar", "Timothée Fisher"]
+description = "A high-frequency metrics exporter"
+
+[dependencies]
+clap = { version = "4.5.53", features = ["derive"] }
+color-eyre = "0.6.5"
+eyre = "0.6.12"
+metric_data_store = { version = "0.1.0", path = "../metric_data_store" }
+metric_data_store_derive = { version = "0.1.0", path = "../metric_data_store_derive" }
+reqwest = "0.12.25"
+serde_json = "1.0.147"
+tokio = { version = "1.48.0", features = ["full"] }
