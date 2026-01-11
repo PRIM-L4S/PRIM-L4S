@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ROUTER_IP="172.20.2.2"
 IPERF_CLIENT_SUBNET="172.20.1.0/24"
 
@@ -10,4 +12,4 @@ tc qdisc replace dev $NETIF root handle 1: fq limit 20480 flow_limit 10240
 
 echo "Server ready"
 
-iperf3 -s
+exec iperf3 -s

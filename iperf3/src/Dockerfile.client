@@ -21,7 +21,7 @@ COPY --from=high_frequency_builder /app/high_frequency_exporter/target/release/h
 COPY ./entrypoint_client.sh /app/entrypoint_client.sh
 RUN chmod +x /app/entrypoint_client.sh
 
-# Set the entrypoint to the script
 WORKDIR /app
 USER root
-ENTRYPOINT ["sh", "-c", "./entrypoint_client.sh"]
+
+ENTRYPOINT ["./entrypoint_client.sh"]

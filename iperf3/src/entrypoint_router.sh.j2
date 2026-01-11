@@ -1,3 +1,5 @@
+#!/bin/sh
+
 NETIF0="eth0"
 NETIF1="eth1"
 
@@ -37,4 +39,4 @@ tc qdisc replace dev $NETIF1 parent 10:1 handle 11: dualpi2
 echo "Router bandwidth limited to {{ router.max_bandwidth }} kbit/s, delay {{ router.delay_config }}"
 
 # Start node_exporter with qdisc collector enabled
-node_exporter --collector.disable-defaults --collector.qdisc
+exec node_exporter --collector.disable-defaults --collector.qdisc

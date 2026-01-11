@@ -26,6 +26,13 @@ async fn main() -> Result<()> {
     let destination_address = env_str("DESTINATION_ADDRESS")?;
     let destination_port = env_u16("DESTINATION_PORT")?;
 
+    // Handle termination signals gracefully
+    // Allows for faster shutdown of containers
+    ctrlc::set_handler(|| {
+        println!("Received termination signal, exiting...");
+        std::process::exit(0);
+    })?;
+
     let data_store = Arc::new(Mutex::new(MetricDataStore::new(client_name)));
 
     let iperf3_config = iperf::Iperf3Config {

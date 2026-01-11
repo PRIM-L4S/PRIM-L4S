@@ -10,6 +10,6 @@ RUN chmod +x /root/entrypoint_router.sh
 # Copy the node_exporter binary into the container
 COPY node_exporter/node_exporter /usr/local/bin/node_exporter
 
-# Set the entrypoint to the script
 WORKDIR /root
-ENTRYPOINT ["sh", "-c", "./entrypoint_router.sh"]
+
+ENTRYPOINT ["./entrypoint_router.sh"]

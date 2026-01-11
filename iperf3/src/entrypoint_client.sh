@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Tell linux that iperf-server is reachable through the router
 ROUTER_IP="172.20.1.2"
 IPERF_SERVER_SUBNET="172.20.2.0/24"
@@ -14,4 +16,5 @@ tc qdisc replace dev $NETIF root handle 1: fq limit 20480 flow_limit 10240
 
 echo "Client ready"
 
-/app/high_frequency_exporter
+# We use exec to receive any SIGTERM/SIGINT signals and pass them to high_frequency_exporter
+exec /app/high_frequency_exporter

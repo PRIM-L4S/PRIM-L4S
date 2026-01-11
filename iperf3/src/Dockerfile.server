@@ -6,6 +6,6 @@ RUN apt-get update && apt-get install -y iproute2 ethtool iperf3
 COPY entrypoint_server.sh /root/entrypoint_server.sh
 RUN chmod +x /root/entrypoint_server.sh
 
-# Set the entrypoint to the script
 WORKDIR /root
-ENTRYPOINT ["sh", "-c", "./entrypoint_server.sh"]
+
+ENTRYPOINT ["./entrypoint_server.sh"]
