@@ -14,25 +14,27 @@ pub struct SocketStatistics {
     pub statistics: HashMap<String, String>,
 }
 
-impl SocketStatistics {
-    pub fn get_u64_statistic(&self, key: &str) -> Result<u64, SockStatError> {
-        match self.statistics.get(key) {
-            Some(value_str) => value_str
-                .parse::<u64>()
-                .map_err(|op: ParseIntError| SockStatError::Other(eyre::eyre!(op))),
-            None => Err(SockStatError::ParsingError(format!(
-                "Statistic '{}' not found",
-                key
-            ))),
-        }
-    }
-}
-
 pub enum SockStatError {
     NoMatchingSocket,
     TooManyMatchingSockets,
     ParsingError(String),
     Other(eyre::Error),
+}
+
+pub enum GetSocketStatError {
+    StatisticNotFound,
+    Other(eyre::Error),
+}
+
+impl SocketStatistics {
+    pub fn get_u64_statistic(&self, key: &str) -> Result<u64, GetSocketStatError> {
+        match self.statistics.get(key) {
+            Some(value_str) => value_str
+                .parse::<u64>()
+                .map_err(|op: ParseIntError| GetSocketStatError::Other(eyre::eyre!(op))),
+            None => Err(GetSocketStatError::StatisticNotFound),
+        }
+    }
 }
 
 impl fmt::Display for SockStatError {
@@ -44,6 +46,17 @@ impl fmt::Display for SockStatError {
             }
             SockStatError::ParsingError(msg) => write!(f, "Parsing error: {}", msg),
             SockStatError::Other(err) => write!(f, "Other error: {}", err),
+        }
+    }
+}
+
+impl fmt::Display for GetSocketStatError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            GetSocketStatError::StatisticNotFound => {
+                write!(f, "Statistic not found in the ss command output")
+            }
+            GetSocketStatError::Other(err) => write!(f, "Other error: {}", err),
         }
     }
 }
@@ -81,7 +94,7 @@ pub async fn get_socket_statistics(
 
     if parts.len() < 5 {
         return Err(SockStatError::ParsingError(
-            "Unexpected output format from ss command".to_string(),
+            "Unexpected output format from ss command. Not enough results.".to_string(),
         ));
     }
 

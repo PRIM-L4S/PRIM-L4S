@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use tokio::time::sleep;
 
-use crate::socket_statistics::{SockStatError, get_socket_statistics};
+use crate::socket_statistics::{GetSocketStatError, SockStatError, get_socket_statistics};
 use crate::{constants::INTERVAL_GATHERING, data_store::MetricDataStore};
 
 /// Gathers socket statistics in a loop at high frequency
@@ -26,11 +26,13 @@ pub async fn loop_gathering(
 
                 match stats.get_u64_statistic("cwnd") {
                     Ok(cwnd) => storage.cwnd.push(now, cwnd),
+                    Err(GetSocketStatError::StatisticNotFound) => (), // silently skip if not found
                     Err(err) => println!(" > Socket statistics failed (cwnd): {}", err),
                 }
 
                 match stats.get_u64_statistic("bytes_sent") {
                     Ok(bytes_sent) => storage.bytes_sent.push(now, bytes_sent),
+                    Err(GetSocketStatError::StatisticNotFound) => (), // silently skip if not found
                     Err(err) => println!(" > Socket statistics failed (bytes_sent): {}", err),
                 }
 
