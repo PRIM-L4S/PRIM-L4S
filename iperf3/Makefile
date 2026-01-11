@@ -9,14 +9,12 @@ create-dist:
 	rm -rf dist
 	mkdir dist
 	cp src/* dist/
-	cp -r iperf3_exporter dist/
 	cp -r node_exporter dist/
-	cp -r high_frequency_exporter dist/
+	rsync -a --exclude='target/' high_frequency_exporter/ dist/high_frequency_exporter/
 
 gen-templates:
 	. .venv/bin/activate; \
 	jinja2 dist/entrypoint_router.sh.j2 scenarii/$(SCENARIO).json > dist/entrypoint_router.sh; \
-	jinja2 dist/prometheus.yml.j2 scenarii/$(SCENARIO).json > dist/prometheus.yml; \
 	jinja2 dist/docker-compose.yml.j2 scenarii/$(SCENARIO).json > dist/docker-compose.yml
 
 compose-up:

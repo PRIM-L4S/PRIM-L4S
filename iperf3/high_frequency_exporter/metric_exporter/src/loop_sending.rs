@@ -8,6 +8,7 @@ use tokio::time::sleep;
 
 use crate::{constants::INTERVAL_SENDING, data_store::MetricDataStore};
 
+/// Sends gathered metric data to the metric server at regular intervals
 pub async fn loop_sending(data_storage: Arc<Mutex<MetricDataStore>>, metric_server_url: &str) {
     let http_client = reqwest::Client::new();
     let api_url = format!("{}/api/v1/import", metric_server_url);

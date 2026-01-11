@@ -1,0 +1,32 @@
+{
+    "description": "10 reno clients share a common 5 mbit link. No iperf limit.",
+    "configs": {
+        "reno": {
+            "docker": {
+                "sysctls": [
+                    "net.ipv4.tcp_congestion_control=reno"
+                ]
+            },
+            "iperf": {
+                "bitrate": "0"
+            }
+        }
+    },
+    "instances": {
+        "reno1": "reno",
+        "reno2": "reno",
+        "reno3": "reno",
+        "reno4": "reno",
+        "reno5": "reno",
+        "reno6": "reno",
+        "reno7": "reno",
+        "reno8": "reno",
+        "reno9": "reno",
+        "reno10": "reno"
+    },
+    "router": {
+        "max_bandwidth": "5mbit",
+        "delay_config": "10ms 1ms"
+    },
+    "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
+}

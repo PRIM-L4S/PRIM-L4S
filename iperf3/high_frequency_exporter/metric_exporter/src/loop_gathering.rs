@@ -6,6 +6,7 @@ use tokio::time::sleep;
 use crate::socket_statistics::{SockStatError, get_socket_statistics};
 use crate::{constants::INTERVAL_GATHERING, data_store::MetricDataStore};
 
+/// Gathers socket statistics in a loop at high frequency
 pub async fn loop_gathering(
     data_storage: Arc<Mutex<MetricDataStore>>,
     sender_port: u16,

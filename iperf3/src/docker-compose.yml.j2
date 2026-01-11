@@ -13,8 +13,13 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
+      - METRIC_SERVER_URL=http://victoriametrics:8428
+      - SENDER_PORT=4444
+      # The iperf3 server to connect to
+      - DESTINATION_ADDRESS=172.20.2.{{ 10 + ns.instance_counter }}
+      - DESTINATION_PORT=5201
       # Just used to set a fancy label in the exporter
-      - HFE_HOST={{ name }}
+      - CLIENT_NAME={{ name }}
     networks:
       iperf-client-net:
         ipv4_address: 172.20.1.{{ 10 + ns.instance_counter }}
@@ -49,15 +54,13 @@ services:
         ipv4_address: 172.20.2.2
 
   victoriametrics:
-    image: victoriametrics/victoria-metrics:latest
+    image: victoriametrics/victoria-metrics:v1.133.0
     container_name: victoriametrics
     command:
       - "-storageDataPath=/victoria-metrics-data"
       - "-retentionPeriod=100y"  # keep the data 100 years
-      - "-promscrape.config=/etc/victoria-metrics/prometheus.yml"
       - "-search.cacheTimestampOffset=1h" # This is required as we use backdated timestamps for bulk inserts
     volumes:
-      - ./prometheus.yml:/etc/victoria-metrics/prometheus.yml
       - victoria_data:/victoria-metrics-data
     ports:
       - "8428:8428"
