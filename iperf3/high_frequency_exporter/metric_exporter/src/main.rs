@@ -1,7 +1,8 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use eyre::Result;
 use tokio::join;
+use tokio::sync::Mutex;
 
 use crate::data_store::MetricDataStore;
 use crate::utils::{env_str, env_u16};
@@ -35,8 +36,8 @@ async fn main() -> Result<()> {
 
     join!(
         loop_sending::loop_sending(data_store.clone(), &metric_server_url),
-        loop_gathering::loop_gathering(data_store, sender_port, destination_port),
-        loop_iperf::loop_iperf(&iperf3_config),
+        loop_gathering::loop_gathering(data_store.clone(), sender_port, destination_port),
+        loop_iperf::loop_iperf(data_store, &iperf3_config),
     );
 
     Ok(())

@@ -1,6 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use tokio::sync::Mutex;
 use tokio::time::sleep;
 
 use crate::socket_statistics::{GetSocketStatError, SockStatError, get_socket_statistics};
@@ -22,7 +23,7 @@ pub async fn loop_gathering(
 
         match socket_stats {
             Ok(stats) => {
-                let mut storage = data_storage.lock().unwrap();
+                let mut storage = data_storage.lock().await;
 
                 match stats.get_u64_statistic("cwnd") {
                     Ok(cwnd) => storage.cwnd.push(now, cwnd),

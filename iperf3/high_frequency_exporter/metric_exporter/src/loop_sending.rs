@@ -1,10 +1,7 @@
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
 
 use metric_data_store::MetricDataToImport;
-use tokio::time::sleep;
+use tokio::{sync::Mutex, time::sleep};
 
 use crate::{constants::INTERVAL_SENDING, data_store::MetricDataStore};
 
@@ -14,7 +11,7 @@ pub async fn loop_sending(data_storage: Arc<Mutex<MetricDataStore>>, metric_serv
     let api_url = format!("{}/api/v1/import", metric_server_url);
 
     loop {
-        let mut storage = data_storage.lock().unwrap();
+        let mut storage = data_storage.lock().await;
         let formatted_data = storage.to_import_format();
         // We clear the storage regardless of the sending result
         // This can cause data loss, but also prevents data buildup

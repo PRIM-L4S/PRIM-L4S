@@ -7,4 +7,5 @@ pub struct MetricDataStore {
     pub bytes_sent: MetricDataFormat,
     pub recv_q: MetricDataFormat,
     pub send_q: MetricDataFormat,
+    pub number_of_benchmarks: MetricDataFormat,
 }
