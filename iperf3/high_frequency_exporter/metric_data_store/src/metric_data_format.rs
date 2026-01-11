@@ -41,6 +41,10 @@ impl MetricDataFormat {
         self.timestamps.clear();
         self.values.clear();
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
 }
 
 pub trait MetricDataToImport {

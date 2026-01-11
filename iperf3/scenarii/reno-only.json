@@ -1,5 +1,5 @@
 {
-    "description": "10 reno clients share a common 5 mbit link. No iperf limit.",
+    "description": "2 reno clients share a common 5 mbit link. No iperf limit.",
     "configs": {
         "reno": {
             "docker": {
@@ -14,15 +14,7 @@
     },
     "instances": {
         "reno1": "reno",
-        "reno2": "reno",
-        "reno3": "reno",
-        "reno4": "reno",
-        "reno5": "reno",
-        "reno6": "reno",
-        "reno7": "reno",
-        "reno8": "reno",
-        "reno9": "reno",
-        "reno10": "reno"
+        "reno2": "reno"
     },
     "router": {
         "max_bandwidth": "5mbit",

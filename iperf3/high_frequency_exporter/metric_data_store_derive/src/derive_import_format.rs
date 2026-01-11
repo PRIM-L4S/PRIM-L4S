@@ -40,9 +40,11 @@ pub fn to_import_format_derive(input: TokenStream) -> TokenStream {
     let extract_data_from_fields = data.fields.iter().map(|field| {
         let field_name = &field.ident;
         quote! {
-            let data_json = ::serde_json::to_string(&self.#field_name).unwrap();
-            result.push_str(&data_json);
-            result.push('\n');
+            if !self.#field_name.is_empty() {
+                let data_json = ::serde_json::to_string(&self.#field_name).unwrap();
+                result.push_str(&data_json);
+                result.push('\n');
+            }
         }
     });
 

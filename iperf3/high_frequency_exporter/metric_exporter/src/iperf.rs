@@ -24,8 +24,9 @@ pub async fn make_iperf3_benchmark(config: &Iperf3Config) -> Result<()> {
 
     if !output.status.success() {
         return Err(eyre::eyre!(
-            "> Iperf3 command failed with status: {}",
-            output.status
+            "iperf3 command failed with status '{}' and stderr: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr)
         ));
     }
 
