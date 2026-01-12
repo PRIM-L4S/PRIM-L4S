@@ -1,27 +1,44 @@
-# ============== Build high_frequency_exporter stage ==================
-FROM rust:1.92.0-trixie AS high_frequency_builder
+# ================== Chef install stage ==================
+# To reduce build times
+FROM rust:1.92.0-trixie AS chef-install
 
-COPY high_frequency_exporter/ /app/high_frequency_exporter/
+RUN cargo install cargo-chef --locked
 
-WORKDIR /app/high_frequency_exporter/metric_exporter
-RUN cargo fetch
+# ================== Chef prepare stage ==================
+FROM chef-install AS chef-prepare
+
+WORKDIR /app/
+COPY high_frequency_exporter/ .
+
+RUN cargo chef prepare --recipe-path recipe.json
+
+# ===================== Build stage ======================
+FROM chef-install AS builder
+
+WORKDIR /app/
+COPY --from=chef-prepare /app/recipe.json recipe.json
+
+RUN cargo chef cook --release --recipe-path recipe.json
+
+COPY high_frequency_exporter/ .
+
 RUN cargo build --release
 
-# ==================== Base stage ======================
-FROM debian:13.1 AS base
+# =============== Base of the runner stage ===============
+FROM debian:13.1 AS base-runner
 
-# Install iperf3 for network testing
 RUN apt-get update && apt-get install -y iproute2 ethtool iperf3
 
-# ==================== Local stage ======================
-FROM base AS runner
-COPY --from=high_frequency_builder /app/high_frequency_exporter/target/release/high_frequency_exporter /app/high_frequency_exporter
+# ==================== Runner stage ======================
+FROM base-runner AS runner
 
-# Copy the entrypoint script into the container
-COPY ./entrypoint_client.sh /app/entrypoint_client.sh
-RUN chmod +x /app/entrypoint_client.sh
+WORKDIR /app/
 
-WORKDIR /app
+COPY --from=builder /app/target/release/high_frequency_exporter high_frequency_exporter
+
+COPY ./entrypoint_client.sh entrypoint_client.sh
+RUN chmod +x entrypoint_client.sh
+
 USER root
 
 ENTRYPOINT ["./entrypoint_client.sh"]

@@ -3,7 +3,7 @@ name = "metric_data_store_derive"
 version = "0.1.0"
 edition = "2024"
 authors = ["Thomas Sauvage", "Emre Ucar", "Timothée Fisher"]
-description = "A data store for the high-frequency metrics exporter"
+description = "The derive macros for the data store of the high-frequency metrics exporter"
 
 [dependencies]
 eyre = "0.6.12"
