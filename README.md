@@ -1,54 +1,15 @@
 # PRIM - L4S
 
-## Install the modified linux kernel
+> Authors: Emre Ucar, Thomas Sauvage, Timothée Fisher
 
-- Install the kernel
+This repository contains the methods we developed to observe the behaviour of various congestion control algorithms. Our work focused on the behaviour of L4S and TCP Prague in different scenarios, such as in networks with Reno clients.
 
-```sh
-./install_kernel.sh
-```
+These productions were made as part of our project PRIM at Télécom Paris.
 
-- Get the path of the menu entry. For that, we must find the name of the Linux Prague GRUB menu entry and, if necessary, the name of the sub menu it is into.
+## Folder structure
 
-  - List the menu entries
-
-    ```sh
-    sudo grep menuentry /boot/grub/grub.cfg
-    ```
-
-  - Note that `Ubuntu, with Linux [...]-prague-[...]` is in a sub menu: `Advanced options for Ubuntu`. We will need to put that sub menu in the path.
-
-  - The synthax of the path is the following: `[sub_menu_name]>[menu_entry_name]`. Those name are not the one on the left (e.g. `Ubuntu, with Linux [...]-prague-[...]`) but the one on the right (e.g `'gnulinux-5.15.72-48b3db6b4-prague-111-advanced-b852d8d2-8460-44aa-8998-23e4f04d73cf`)
-
-  - In our case, this gives us the path: `gnulinux-advanced-b852d8d2-8460-44aa-8998-23e4f04d73cf>gnulinux-5.15.72-48b3db6b4-prague-111-advanced-b852d8d2-8460-44aa-8998-23e4f04d73cf`
-
-- Put this path as default in GRUB. Modify `GRUB_DEFAULT` to the path (e.g. `GRUB_DEFAULT='gnulinux-advanced-b852d8d2-8460-44aa-8998-23e4f04d73cf>gnulinux-5.15.72-48b3db6b4-prague-111-advanced-b852d8d2-8460-44aa-8998-23e4f04d73cf'`)
-
-```sh
-sudo nano /etc/default/grub
-```
-
-- Update grub config and reboot
-
-```sh
-sudo update-grub
-sudo reboot
-```
-
-- Check that the loaded kernel is the correct one:
-
-```sh
-uname -r
-```
-
-- Install dependencies
-
-```sh
-./install_dependencies.sh
-```
-
-- Activate the modules. ⚠️ We might need to execute thios command at every restart.
-
-```sh
-./activate_kernel_modules.sh
-```
+| Folder                   | Comments                                                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `benchmarking-tools/`    | The various tools we develop or use to gather metrics in our benchmarks                                              |
+| `docker-testbed/`        | A containerized testbed used to observe the behavior of different congestion control algorithms in various scenarios |
+| `install-prague-kernel/` | Some comments and advice on how to install the kernel modules necessary to run TCP Prague                            |

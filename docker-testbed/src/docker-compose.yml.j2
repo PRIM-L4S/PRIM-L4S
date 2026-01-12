@@ -1,0 +1,87 @@
+# {{ template_generated_info }}
+
+services:
+{% set ns = namespace(instance_counter=1) %}
+{% for name, config_name in instances.items() %}
+{% set config = configs.get(config_name) %}
+  ipf-client-{{ name }}:
+    container_name: ipf-client-{{ name }}
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    sysctls: {{ config.docker.sysctls }}
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - METRIC_SERVER_URL=http://victoriametrics:8428
+      - SENDER_PORT=4444
+      # The iperf3 server to connect to
+      - DESTINATION_ADDRESS=172.20.2.{{ 10 + ns.instance_counter }}
+      - DESTINATION_PORT=5201
+      # Just used to set a fancy label in the exporter
+      - CLIENT_NAME={{ name }}
+    networks:
+      iperf-client-net:
+        ipv4_address: 172.20.1.{{ 10 + ns.instance_counter }}
+    depends_on:
+      - ipf-server-{{ name }}
+
+  ipf-server-{{ name }}:
+    container_name: ipf-server-{{ name }}
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    cap_add:
+      - NET_ADMIN
+    networks:
+      iperf-server-net:
+        ipv4_address: 172.20.2.{{ 10 + ns.instance_counter }}
+{% set ns.instance_counter = ns.instance_counter + 1 %}
+{% endfor %}
+
+  router:
+    container_name: router
+    build:
+      context: .
+      dockerfile: Dockerfile.router
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks:
+      iperf-client-net:
+        ipv4_address: 172.20.1.2
+      iperf-server-net:
+        ipv4_address: 172.20.2.2
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.133.0
+    container_name: victoriametrics
+    command:
+      - "-storageDataPath=/victoria-metrics-data"
+      - "-retentionPeriod=100y"  # keep the data 100 years
+      - "-search.cacheTimestampOffset=1h" # This is required as we use backdated timestamps for bulk inserts
+    volumes:
+      - victoria_data:/victoria-metrics-data
+    ports:
+      - "8428:8428"
+    networks:
+      iperf-client-net:
+        ipv4_address: 172.20.1.3
+
+networks:
+  iperf-client-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+          gateway: 172.20.1.1
+
+  iperf-server-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+          gateway: 172.20.2.1
+
+volumes:
+  victoria_data:
