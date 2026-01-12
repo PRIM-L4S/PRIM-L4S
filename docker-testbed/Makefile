@@ -1,7 +1,6 @@
 all: list
 
 install:
-	sudo apt install python3.12-venv
 	python3 -m venv .venv
 	. .venv/bin/activate; pip install jinja2-cli
 
@@ -9,8 +8,8 @@ create-dist:
 	rm -rf dist
 	mkdir dist
 	cp src/* dist/
-	cp -r node_exporter dist/
-	rsync -a --exclude='target/' high_frequency_exporter/ dist/high_frequency_exporter/
+	cp -r ../benchmarking-tools/node_exporter dist/
+	rsync -a --exclude='target/' ../benchmarking-tools/high_frequency_exporter/ dist/high_frequency_exporter/
 
 gen-templates:
 	. .venv/bin/activate; \
