@@ -10,8 +10,7 @@ pub struct MetricDataStore {
     pub ss_recv_q: MetricDataFormat,
     pub ss_send_q: MetricDataFormat,
     pub iperf_bytes: MetricDataFormat,
-    /// bits per second
-    pub iperf_bps: MetricDataFormat,
+    pub iperf_bits_per_second: MetricDataFormat,
     pub iperf_retransmits: MetricDataFormat,
     pub iperf_snd_cwnd: MetricDataFormat,
     pub iperf_snd_wnd: MetricDataFormat,
