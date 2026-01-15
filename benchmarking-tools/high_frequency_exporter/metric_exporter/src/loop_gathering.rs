@@ -26,13 +26,13 @@ pub async fn loop_gathering(
                 let mut storage = data_storage.lock().await;
 
                 match stats.get_u64_statistic("cwnd") {
-                    Ok(cwnd) => storage.cwnd.push(now, cwnd),
+                    Ok(cwnd) => storage.ss_cwnd.push(now, cwnd),
                     Err(GetSocketStatError::StatisticNotFound) => (), // silently skip if not found
                     Err(err) => println!(" > Socket statistics failed (cwnd): {}", err),
                 }
 
                 match stats.get_u64_statistic("bytes_sent") {
-                    Ok(bytes_sent) => storage.bytes_sent.push(now, bytes_sent),
+                    Ok(bytes_sent) => storage.ss_bytes_sent.push(now, bytes_sent),
                     Err(GetSocketStatError::StatisticNotFound) => (), // silently skip if not found
                     Err(err) => println!(" > Socket statistics failed (bytes_sent): {}", err),
                 }
@@ -40,15 +40,15 @@ pub async fn loop_gathering(
                 match stats.get_f64_f64_statistic("rtt", "/") {
                     Ok((rtt, rttvar)) => {
                         // convert float ms to integer µs
-                        storage.rtt.push(now, (rtt * 1000.) as u64);
-                        storage.rttvar.push(now, (rttvar * 1000.) as u64);
+                        storage.ss_rtt.push(now, (rtt * 1000.) as u64);
+                        storage.ss_rttvar.push(now, (rttvar * 1000.) as u64);
                     }
                     Err(GetSocketStatError::StatisticNotFound) => (), // silently skip if not found
                     Err(err) => println!(" > Socket statistics failed (rtt+rttvar): {}", err),
                 }
 
-                storage.recv_q.push(now, stats.recv_q);
-                storage.send_q.push(now, stats.send_q);
+                storage.ss_recv_q.push(now, stats.recv_q);
+                storage.ss_send_q.push(now, stats.send_q);
 
                 drop(storage);
             }

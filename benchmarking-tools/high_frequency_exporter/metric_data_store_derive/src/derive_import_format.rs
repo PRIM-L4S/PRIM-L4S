@@ -30,7 +30,7 @@ pub fn to_import_format_derive(input: TokenStream) -> TokenStream {
 
     let new_fields = data.fields.iter().map(|field| {
         let field_name = &field.ident;
-        let field_name_formatted = format!("hfe_{}", field_name.as_ref().unwrap());
+        let field_name_formatted = field_name.as_ref().unwrap().to_string();
 
         quote! {
             #field_name: MetricDataFormat::new(#field_name_formatted, &host),

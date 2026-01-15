@@ -43,7 +43,9 @@ pub async fn loop_iperf(data_storage: Arc<Mutex<MetricDataStore>>, config: &iper
             .expect("The system time is before the UNIX EPOCH")
             .as_millis();
 
-        storage.number_of_benchmarks.push(now, number_of_benchmarks);
+        storage
+            .hfe_number_of_benchmarks
+            .push(now, number_of_benchmarks);
 
         drop(storage);
 
