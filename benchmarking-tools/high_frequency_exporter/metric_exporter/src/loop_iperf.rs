@@ -51,7 +51,7 @@ pub async fn loop_iperf(data_storage: Arc<Mutex<MetricDataStore>>, config: &iper
 
         // TODO: Gather statistics about the iperf3 run
         println!("Starting iperf3 benchmark");
-        if let Err(err) = make_iperf3_benchmark(config).await {
+        if let Err(err) = make_iperf3_benchmark(config, data_storage.clone()).await {
             println!(" > Iperf3 benchmark failed: {}", err);
         }
 
