@@ -5,6 +5,7 @@ use std::{
 };
 
 use eyre::Result;
+use metric_data_store::MetricDataFormat;
 use serde_json::{Map, Value};
 use tokio::sync::Mutex;
 
@@ -16,19 +17,73 @@ pub struct Iperf3Config {
     pub destination_port: u16,
 }
 
-fn get_u64(data: &Map<String, Value>, key: &str) -> u64 {
-    data.get(key).and_then(|x| x.as_u64()).unwrap_or_default()
+fn get_u64(data: &Map<String, Value>, key: &str) -> Option<u64> {
+    data.get(key).and_then(|x| x.as_u64())
 }
 
-fn get_f64(data: &Map<String, Value>, key: &str) -> f64 {
-    data.get(key).and_then(|x| x.as_f64()).unwrap_or_default()
+fn get_f64(data: &Map<String, Value>, key: &str) -> Option<u64> {
+    Some(data.get(key).and_then(|x| x.as_f64())? as u64)
 }
 
-fn get_duration(data: &Map<String, Value>, key: &str) -> Duration {
+fn get_duration(data: &Map<String, Value>, key: &str) -> Option<Duration> {
     data.get(key)
         .and_then(|x| x.as_f64())
         .and_then(|secs| Duration::try_from_secs_f64(secs).ok())
-        .unwrap_or_default()
+}
+
+fn push_metric(data_format: &mut MetricDataFormat, now: u128, value: Option<u64>) {
+    if let Some(value) = value {
+        data_format.push(now, value);
+    }
+}
+
+fn push_results(storage: &mut MetricDataStore, t0: SystemTime, stdout: &str) -> Result<()> {
+    let Value::Object(obj) = serde_json::from_str(stdout)? else {
+        return Ok(());
+    };
+
+    let Some(intervals) = obj.get("intervals").and_then(|x| x.as_array()) else {
+        return Ok(());
+    };
+
+    for interval in intervals {
+        let Some(data) = interval
+            .as_object()
+            .and_then(|hm| hm.get("sum"))
+            .and_then(|val| val.as_object())
+        else {
+            continue;
+        };
+
+        let Some(seconds) = get_duration(data, "seconds") else {
+            continue;
+        };
+
+        let now = t0
+            .add(seconds)
+            .duration_since(UNIX_EPOCH)
+            .expect("The system time is before the UNIX EPOCH")
+            .as_millis();
+
+        push_metric(&mut storage.iperf_bytes, now, get_u64(data, "bytes"));
+        push_metric(
+            &mut storage.iperf_bits_per_second,
+            now,
+            get_f64(data, "bits_per_second"),
+        );
+        push_metric(
+            &mut storage.iperf_retransmits,
+            now,
+            get_u64(data, "retransmits"),
+        );
+        push_metric(&mut storage.iperf_snd_cwnd, now, get_u64(data, "snd_cwnd"));
+        push_metric(&mut storage.iperf_snd_wnd, now, get_u64(data, "snd_wnd"));
+        push_metric(&mut storage.iperf_rtt, now, get_u64(data, "rtt"));
+        push_metric(&mut storage.iperf_rttvar, now, get_u64(data, "rttvar"));
+        push_metric(&mut storage.iperf_pmtu, now, get_u64(data, "pmtu"));
+    }
+
+    Ok(())
 }
 
 pub async fn make_iperf3_benchmark(
@@ -59,50 +114,8 @@ pub async fn make_iperf3_benchmark(
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let Value::Object(obj) = serde_json::from_str(&stdout)? else {
-        return Ok(());
-    };
-
-    let Some(intervals) = obj.get("intervals").and_then(|x| x.as_array()) else {
-        return Ok(());
-    };
-
     let mut storage = data_storage.lock().await;
-
-    for interval in intervals {
-        let Some(data) = interval
-            .as_object()
-            .and_then(|hm| hm.get("sum"))
-            .and_then(|val| val.as_object())
-        else {
-            return Ok(());
-        };
-
-        let timestamp = t0
-            .add(get_duration(data, "seconds"))
-            .duration_since(UNIX_EPOCH)
-            .expect("The system time is before the UNIX EPOCH")
-            .as_millis();
-
-        storage.iperf_bytes.push(timestamp, get_u64(data, "bytes"));
-        storage
-            .iperf_bits_per_second
-            .push(timestamp, get_f64(data, "bits_per_second") as u64);
-        storage
-            .iperf_retransmits
-            .push(timestamp, get_u64(data, "retransmits"));
-        storage
-            .iperf_snd_cwnd
-            .push(timestamp, get_u64(data, "snd_cwnd"));
-        storage
-            .iperf_snd_wnd
-            .push(timestamp, get_u64(data, "snd_wnd"));
-        storage.iperf_rtt.push(timestamp, get_u64(data, "rtt"));
-        storage
-            .iperf_rttvar
-            .push(timestamp, get_u64(data, "rttvar"));
-        storage.iperf_pmtu.push(timestamp, get_u64(data, "pmtu"));
-    }
+    push_results(&mut storage, t0, &stdout)?;
 
     Ok(())
 }
