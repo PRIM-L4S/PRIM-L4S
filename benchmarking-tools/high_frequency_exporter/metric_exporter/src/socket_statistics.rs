@@ -23,6 +23,7 @@ pub enum SockStatError {
 
 pub enum GetSocketStatError {
     StatisticNotFound,
+    CouldNotSplit,
     Other(eyre::Error),
 }
 
@@ -33,6 +34,25 @@ impl SocketStatistics {
                 .parse::<u64>()
                 .map_err(|op: ParseIntError| GetSocketStatError::Other(eyre::eyre!(op))),
             None => Err(GetSocketStatError::StatisticNotFound),
+        }
+    }
+
+    pub fn get_f64_f64_statistic(
+        &self,
+        key: &str,
+        delimiter: &str,
+    ) -> Result<(f64, f64), GetSocketStatError> {
+        let Some(value_str) = self.statistics.get(key) else {
+            return Err(GetSocketStatError::StatisticNotFound);
+        };
+
+        let Some((first, second)) = value_str.split_once(delimiter) else {
+            return Err(GetSocketStatError::CouldNotSplit);
+        };
+
+        match (first.parse::<f64>(), second.parse::<f64>()) {
+            (Ok(first), Ok(second)) => Ok((first, second)),
+            (Err(err), _) | (_, Err(err)) => Err(GetSocketStatError::Other(eyre::eyre!(err))),
         }
     }
 }
@@ -55,6 +75,9 @@ impl fmt::Display for GetSocketStatError {
         match self {
             GetSocketStatError::StatisticNotFound => {
                 write!(f, "Statistic not found in the ss command output")
+            }
+            GetSocketStatError::CouldNotSplit => {
+                write!(f, "Statistic entry could not be split by delimiter")
             }
             GetSocketStatError::Other(err) => write!(f, "Other error: {}", err),
         }

@@ -37,6 +37,16 @@ pub async fn loop_gathering(
                     Err(err) => println!(" > Socket statistics failed (bytes_sent): {}", err),
                 }
 
+                match stats.get_f64_f64_statistic("rtt", "/") {
+                    Ok((rtt, rttvar)) => {
+                        // convert float ms to integer µs
+                        storage.rtt.push(now, (rtt * 1000.) as u64);
+                        storage.rttvar.push(now, (rttvar * 1000.) as u64);
+                    }
+                    Err(GetSocketStatError::StatisticNotFound) => (), // silently skip if not found
+                    Err(err) => println!(" > Socket statistics failed (rtt+rttvar): {}", err),
+                }
+
                 storage.recv_q.push(now, stats.recv_q);
                 storage.send_q.push(now, stats.send_q);
 
