@@ -49,7 +49,9 @@ fn push_results(storage: &mut MetricDataStore, t0: SystemTime, stdout: &str) -> 
     for interval in intervals {
         let Some(data) = interval
             .as_object()
-            .and_then(|hm| hm.get("sum"))
+            .and_then(|hm| hm.get("streams"))
+            .and_then(|val| val.as_array())
+            .and_then(|arr| arr.first())
             .and_then(|val| val.as_object())
         else {
             continue;
