@@ -37,7 +37,7 @@ fn push_metric(data_format: &mut MetricDataFormat, now: u128, value: Option<u64>
     }
 }
 
-fn push_results(storage: &mut MetricDataStore, t0: SystemTime, stdout: &str) -> Result<()> {
+fn push_results(storage: &mut MetricDataStore, mut t0: SystemTime, stdout: &str) -> Result<()> {
     let Value::Object(obj) = serde_json::from_str(stdout)? else {
         return Ok(());
     };
@@ -61,8 +61,8 @@ fn push_results(storage: &mut MetricDataStore, t0: SystemTime, stdout: &str) -> 
             continue;
         };
 
+        t0 += seconds;
         let now = t0
-            .add(seconds)
             .duration_since(UNIX_EPOCH)
             .expect("The system time is before the UNIX EPOCH")
             .as_millis();
