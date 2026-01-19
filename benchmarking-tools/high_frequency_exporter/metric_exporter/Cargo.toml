@@ -9,6 +9,7 @@ description = "A high-frequency metrics exporter"
 color-eyre = "0.6.5"
 ctrlc = { version = "3.5.1", features = ["termination"] }
 eyre = "0.6.12"
+libc = "0.2.180"
 metric_data_store = { version = "0.1.0", path = "../metric_data_store" }
 metric_data_store_derive = { version = "0.1.0", path = "../metric_data_store_derive" }
 reqwest = "0.12.25"
