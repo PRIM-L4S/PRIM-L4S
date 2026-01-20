@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Default)]
 #[repr(C)]
 pub struct TcpInfo {
     pub tcpi_state: u8,
