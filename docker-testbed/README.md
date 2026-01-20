@@ -40,16 +40,15 @@ make logs
 make down
 ```
 
-## Access prometheus web UI
-
+## Access Victoria Metrics web UI
 
 - Open SSH tunnel with forwarding:
 
 ```sh
-ssh -L 9000:localhost:9000 l4s
+ssh -L 8428:localhost:8428 l4s
 ```
 
-- Open http://localhost:9000 in your browser.
+- Open http://localhost:8428 in your browser.
 
 ## Creating bufferbloat
 

@@ -38,6 +38,24 @@ pub async fn loop_gathering(
                 storage.ss_rtt.push(now, stats.tcpi_rtt as u64);
                 storage.ss_rttvar.push(now, stats.tcpi_rttvar as u64);
                 storage.ss_number_of_samples.push(now, number_of_samples);
+                storage
+                    .ss_delivered_e1_bytes
+                    .push(now, stats.tcpi_delivered_e1_bytes as u64);
+                storage
+                    .ss_delivered_e0_bytes
+                    .push(now, stats.tcpi_delivered_e0_bytes as u64);
+                storage
+                    .ss_delivered_ce_bytes
+                    .push(now, stats.tcpi_delivered_ce_bytes as u64);
+                storage
+                    .ss_received_e1_bytes
+                    .push(now, stats.tcpi_received_e1_bytes as u64);
+                storage
+                    .ss_received_e0_bytes
+                    .push(now, stats.tcpi_received_e0_bytes as u64);
+                storage
+                    .ss_received_ce_bytes
+                    .push(now, stats.tcpi_received_ce_bytes as u64);
 
                 drop(storage);
             }
