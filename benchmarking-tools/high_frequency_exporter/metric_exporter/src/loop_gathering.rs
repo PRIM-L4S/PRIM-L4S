@@ -21,7 +21,7 @@ pub async fn loop_gathering(
             .expect("The system time is before the UNIX EPOCH")
             .as_millis();
 
-        let tcp_infos = socket_stats.get_socket_infos();
+        let tcp_infos = socket_stats.get_socket_infos().await;
 
         match tcp_infos {
             Ok(stats) => {
