@@ -1,6 +1,7 @@
 use eyre::Result;
 use std::io::Error;
 use std::mem::{size_of, zeroed};
+use tokio::process::Command;
 
 use crate::socket_statistics::tcp_info::TcpInfo;
 
@@ -14,20 +15,20 @@ pub struct SocketStatistics {
 impl SocketStatistics {
     pub fn new(source_port: u16, destination_port: u16) -> Self {
         SocketStatistics {
-            fd: None,
-            result: unsafe { zeroed() },
             source_port,
             destination_port,
+            fd: None,
+            result: unsafe { zeroed() },
         }
     }
 
-    fn update(&mut self) -> Result<()> {
+    async fn update(&mut self) -> Result<()> {
         let mut len: libc::socklen_t = size_of::<TcpInfo>() as libc::socklen_t;
 
         let fd = match self.fd {
             Some(fd) => fd,
             None => {
-                self.update_fd()?;
+                self.update_fd().await?;
                 self.fd.unwrap()
             }
         };
@@ -46,7 +47,11 @@ impl SocketStatistics {
             }
         }
 
-        // This is not required but will avoid us mistakingly reading stats from a non-established socket
+        if self.result.tcpi_state == 7 {
+            self.fd = None;
+            return Err(eyre::eyre!("Socket is in TCP_CLOSE state"));
+        } else
+
         if self.result.tcpi_state != 1 {
             return Err(eyre::eyre!(
                 "Socket is not in ESTABLISHED state, found state {}",
@@ -57,17 +62,19 @@ impl SocketStatistics {
         Ok(())
     }
 
-    pub fn update_fd(&mut self) -> Result<()> {
-        // Find PID and FD of iperf3 connecting 4444 -> 5201 using lsof
+    pub async fn update_fd(&mut self) -> Result<()> {
+        // Find PID and FD of iperf3 connecting source_port -> destination_port using lsof
+        // TODO: Replace this with a more efficient method
         let lsof_command = format!(
             "lsof -P -n -i :{} | grep iperf3 | grep :{} | awk '{{print $2, $4}}' | head -n 1",
             self.source_port, self.destination_port
         );
 
-        let output = std::process::Command::new("sh")
+        let output = Command::new("sh")
             .arg("-c")
             .arg(&lsof_command)
-            .output()?;
+            .output()
+            .await?;
 
         let s = String::from_utf8_lossy(&output.stdout);
         let parts: Vec<&str> = s.split_whitespace().collect();
@@ -115,8 +122,14 @@ impl SocketStatistics {
         Ok(())
     }
 
-    pub fn get_socket_infos(&mut self) -> Result<&TcpInfo> {
-        self.update()?;
+    /// Retrieves the latest socket statistics
+    ///
+    /// This function should return quickly most of the time
+    /// But takes longer the first time the socket is accessed
+    ///
+    /// The asynchronousness is only used when needing to update the FD
+    pub async fn get_socket_infos(&mut self) -> Result<&TcpInfo> {
+        self.update().await?;
         Ok(&self.result)
     }
 }

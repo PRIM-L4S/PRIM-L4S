@@ -12,6 +12,8 @@ services:
     sysctls: {{ config.docker.sysctls }}
     cap_add:
       - NET_ADMIN
+      # For pidfd_getfd
+      - SYS_PTRACE
     environment:
       - METRIC_SERVER_URL=http://victoriametrics:8428
       - SENDER_PORT=4444
