@@ -31,6 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.server
+    sysctls: {{ config.docker.sysctls }}
     cap_add:
       - NET_ADMIN
     networks:
