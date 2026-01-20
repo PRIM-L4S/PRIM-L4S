@@ -9,6 +9,8 @@ pub struct MetricDataStore {
     pub ss_rttvar: MetricDataFormat,
     // pub ss_recv_q: MetricDataFormat,
     // pub ss_send_q: MetricDataFormat,
+    /// A temporary metric to assess the speed of data gathering
+    pub ss_number_of_samples: MetricDataFormat,
     pub iperf_bytes: MetricDataFormat,
     pub iperf_bits_per_second: MetricDataFormat,
     pub iperf_retransmits: MetricDataFormat,

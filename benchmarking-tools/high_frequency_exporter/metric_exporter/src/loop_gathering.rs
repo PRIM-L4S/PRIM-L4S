@@ -14,6 +14,7 @@ pub async fn loop_gathering(
     destination_port: u16,
 ) {
     let mut socket_stats = SocketStatistics::new(sender_port, destination_port);
+    let mut number_of_samples: u64 = 0;
 
     loop {
         let start = SystemTime::now()
@@ -36,6 +37,7 @@ pub async fn loop_gathering(
                 storage.ss_bytes_sent.push(now, stats.tcpi_bytes_sent);
                 storage.ss_rtt.push(now, stats.tcpi_rtt as u64);
                 storage.ss_rttvar.push(now, stats.tcpi_rttvar as u64);
+                storage.ss_number_of_samples.push(now, number_of_samples);
 
                 drop(storage);
             }
@@ -45,6 +47,8 @@ pub async fn loop_gathering(
                 println!(" > Socket statistics failed: {}", err);
             }
         }
+
+        number_of_samples += 1;
 
         let end = SystemTime::now()
             .duration_since(UNIX_EPOCH)
