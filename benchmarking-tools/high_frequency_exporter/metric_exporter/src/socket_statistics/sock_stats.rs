@@ -1,6 +1,7 @@
 use std::fmt;
 use std::io::Error;
 use std::mem::size_of;
+use std::os::fd::{FromRawFd, OwnedFd};
 use tokio::process::Command;
 
 use crate::socket_statistics::tcp_info::TcpInfo;
@@ -122,8 +123,8 @@ impl SocketStatistics {
         })?;
 
         // Open a file descriptor referring to the process
-        let pidfd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };
-        if pidfd < 0 {
+        let pidfd = unsafe { OwnedFd::from_raw_fd(libc::syscall(libc::SYS_pidfd_open, pid, 0)) };
+        if pidfd.into() < 0 {
             return Err(SockStatError::Other(eyre::eyre!(
                 "pidfd_open failed for PID {}: {}",
                 pid,
@@ -132,7 +133,7 @@ impl SocketStatistics {
         }
 
         // Duplicate the target FD into our process
-        let stolen_fd = unsafe { libc::syscall(libc::SYS_pidfd_getfd, pidfd, target_fd, 0) };
+        let stolen_fd = unsafe { libc::syscall(libc::SYS_pidfd_getfd, pidfd.into(), target_fd, 0) };
         if stolen_fd < 0 {
             return Err(SockStatError::Other(eyre::eyre!(
                 "pidfd_getfd failed for PID {} FD {}: {}",
@@ -141,7 +142,7 @@ impl SocketStatistics {
                 Error::last_os_error()
             )));
         }
-        unsafe { libc::close(pidfd as i32) };
+        drop(pidfd);
 
         self.fd = Some(stolen_fd.try_into().map_err(|e| {
             SockStatError::Other(eyre::eyre!("Failed to convert stolen FD to i32: {}", e))
