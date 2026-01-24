@@ -10,7 +10,7 @@ pub struct SocketStatistics {
     source_port: u16,
     destination_port: u16,
     result: TcpInfo,
-    fd: Option<i32>,
+    fd: Option<OwnedFd>,
 }
 
 pub enum SockStatError {
@@ -52,36 +52,36 @@ impl SocketStatistics {
     async fn update(&mut self) -> Result<(), SockStatError> {
         let mut len: libc::socklen_t = size_of::<TcpInfo>() as libc::socklen_t;
 
-        let fd = match self.fd {
+        let fd = match &self.fd {
             Some(fd) => fd,
             None => {
                 self.update_fd().await?;
-                self.fd.ok_or(SockStatError::Other(eyre::eyre!(
+                self.fd.as_ref().ok_or(SockStatError::Other(eyre::eyre!(
                     "The file descriptor of SocketStatistics was in an incorrect state"
                 )))?
             }
         };
 
-        unsafe {
-            let rc = libc::getsockopt(
-                fd,
+        let rc = unsafe {
+            libc::getsockopt(
+                fd.as_raw_fd(),
                 libc::IPPROTO_TCP,
                 libc::TCP_INFO,
                 &mut self.result as *mut _ as *mut libc::c_void,
                 &mut len as *mut libc::socklen_t,
-            );
+            )
+        };
 
-            if rc < 0 {
-                self.drop_fd();
-                return Err(SockStatError::Other(eyre::eyre!(
-                    "getsockopt TCP_INFO failed: {}",
-                    Error::last_os_error()
-                )));
-            }
+        if rc < 0 {
+            self.fd = None;
+            return Err(SockStatError::Other(eyre::eyre!(
+                "getsockopt TCP_INFO failed: {}",
+                Error::last_os_error()
+            )));
         }
 
         if self.result.tcpi_state == 7 || self.result.tcpi_state == 8 {
-            self.drop_fd();
+            self.fd = None;
             return Err(SockStatError::SocketNotEstablished(self.result.tcpi_state));
         } else if self.result.tcpi_state != 1 && self.result.tcpi_state != 2 {
             return Err(SockStatError::SocketNotEstablished(self.result.tcpi_state));
@@ -123,15 +123,15 @@ impl SocketStatistics {
         })?;
 
         // Open a file descriptor referring to the process
-        let pidfd =
-            unsafe { OwnedFd::from_raw_fd(libc::syscall(libc::SYS_pidfd_open, pid, 0) as i32) };
-        if pidfd.as_raw_fd() < 0 {
+        let pidfd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };
+        if pidfd < 0 {
             return Err(SockStatError::Other(eyre::eyre!(
                 "pidfd_open failed for PID {}: {}",
                 pid,
                 Error::last_os_error()
             )));
         }
+        let pidfd = unsafe { OwnedFd::from_raw_fd(pidfd as i32) };
 
         // Duplicate the target FD into our process
         let stolen_fd =
@@ -144,20 +144,12 @@ impl SocketStatistics {
                 Error::last_os_error()
             )));
         }
+        let stolen_fd = unsafe { OwnedFd::from_raw_fd(stolen_fd as i32) };
         drop(pidfd);
 
-        self.fd = Some(stolen_fd.try_into().map_err(|e| {
-            SockStatError::Other(eyre::eyre!("Failed to convert stolen FD to i32: {}", e))
-        })?);
+        self.fd = Some(stolen_fd);
 
         Ok(())
-    }
-
-    fn drop_fd(&mut self) {
-        if let Some(fd) = self.fd {
-            unsafe { libc::close(fd) };
-            self.fd = None;
-        }
     }
 
     /// Retrieves the latest socket statistics
@@ -169,13 +161,5 @@ impl SocketStatistics {
     pub async fn get_socket_infos(&mut self) -> Result<&TcpInfo, SockStatError> {
         self.update().await?;
         Ok(&self.result)
-    }
-}
-
-impl Drop for SocketStatistics {
-    fn drop(&mut self) {
-        if let Some(fd) = self.fd {
-            unsafe { libc::close(fd) };
-        }
     }
 }
