@@ -11,8 +11,6 @@ use crate::{
     iperf::{self, make_iperf3_benchmark},
 };
 
-const INTERVAL_IPERF_MICRO: u128 = 1_000_000 * (INTERVAL_IPERF as u128);
-
 /// Calculates the duration to wait until the next iperf3 benchmark run
 /// This ensures that benchmarks are run at consistent intervals
 /// synchronized to INTERVAL_IPERF
@@ -22,10 +20,11 @@ fn get_duration_to_next_run() -> Duration {
         .unwrap()
         .as_micros();
 
-    let duration_before_next_run = INTERVAL_IPERF_MICRO - (now % INTERVAL_IPERF_MICRO);
+    let interval_micros = INTERVAL_IPERF.as_micros();
+    let duration_before_next_run = interval_micros - (now % interval_micros);
 
-    // This cast is safe as duration_before_next_run is smaller than INTERVAL_IPERF_MICRO
-    // and INTERVAL_IPERF_MICRO is u128 but fits in u64
+    // This cast is safe as duration_before_next_run is smaller than interval_micros
+    // and interval_micros fits in u64 for reasonable intervals
     Duration::from_micros(duration_before_next_run as u64)
 }
 

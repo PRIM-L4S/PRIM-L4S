@@ -101,7 +101,7 @@ pub async fn make_iperf3_benchmark(
         .arg("--port")
         .arg(config.destination_port.to_string())
         .arg("--time")
-        .arg(DURATION_IPERF.to_string()) // Run for 60 seconds
+        .arg(DURATION_IPERF.as_secs().to_string())
         .arg("--json") // Output in JSON format
         .output()
         .await?;

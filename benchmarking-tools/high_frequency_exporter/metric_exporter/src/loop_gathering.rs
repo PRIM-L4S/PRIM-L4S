@@ -55,13 +55,14 @@ pub async fn loop_gathering(
             .expect("The system time is before the UNIX EPOCH")
             .as_micros();
 
-        let duration_to_sleep_us = INTERVAL_GATHERING.saturating_sub((end - start) as u64);
+        let elapsed = Duration::from_micros(end.saturating_sub(start) as u64);
+        let duration_to_sleep = INTERVAL_GATHERING.saturating_sub(elapsed);
 
-        // if duration_to_sleep_us == 0 {
+        // if duration_to_sleep.is_zero() {
         //     println!(" > Warning: Gathering loop is taking longer than the intended interval");
         //     continue;
         // }
 
-        sleep(Duration::from_micros(duration_to_sleep_us)).await;
+        sleep(duration_to_sleep).await;
     }
 }

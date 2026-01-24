@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use metric_data_store::MetricDataToImport;
 use tokio::{sync::Mutex, time::sleep};
@@ -37,6 +37,6 @@ pub async fn loop_sending(data_storage: Arc<Mutex<MetricDataStore>>, metric_serv
             }
         }
 
-        sleep(Duration::from_micros(INTERVAL_SENDING)).await;
+        sleep(INTERVAL_SENDING).await;
     }
 }
