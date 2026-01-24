@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use tokio::sync::Mutex;
 use tokio::time::sleep;
@@ -17,10 +17,7 @@ pub async fn loop_gathering(
     let mut number_of_samples: u64 = 0;
 
     loop {
-        let start = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("The system time is before the UNIX EPOCH")
-            .as_micros();
+        let loop_start = Instant::now();
 
         let tcp_infos = socket_stats.get_socket_infos().await;
 
@@ -50,13 +47,7 @@ pub async fn loop_gathering(
 
         number_of_samples += 1;
 
-        let end = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("The system time is before the UNIX EPOCH")
-            .as_micros();
-
-        let elapsed = Duration::from_micros(end.saturating_sub(start) as u64);
-        let duration_to_sleep = INTERVAL_GATHERING.saturating_sub(elapsed);
+        let duration_to_sleep = INTERVAL_GATHERING.saturating_sub(loop_start.elapsed());
 
         // if duration_to_sleep.is_zero() {
         //     println!(" > Warning: Gathering loop is taking longer than the intended interval");
