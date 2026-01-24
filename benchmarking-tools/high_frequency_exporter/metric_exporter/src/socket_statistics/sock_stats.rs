@@ -123,7 +123,7 @@ impl SocketStatistics {
         })?;
 
         // Open a file descriptor referring to the process
-        let pidfd = unsafe { OwnedFd::from_raw_fd(libc::syscall(libc::SYS_pidfd_open, pid, 0)) };
+        let pidfd = unsafe { OwnedFd::from_raw_fd(libc::syscall(libc::SYS_pidfd_open, pid, 0) as i32) };
         if pidfd.into() < 0 {
             return Err(SockStatError::Other(eyre::eyre!(
                 "pidfd_open failed for PID {}: {}",
