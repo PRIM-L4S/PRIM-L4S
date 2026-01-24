@@ -20,7 +20,7 @@ fn get_u64(data: &Map<String, Value>, key: &str) -> Option<u64> {
     data.get(key).and_then(|x| x.as_u64())
 }
 
-fn get_f64(data: &Map<String, Value>, key: &str) -> Option<u64> {
+fn get_f64_integer(data: &Map<String, Value>, key: &str) -> Option<u64> {
     Some(data.get(key).and_then(|x| x.as_f64())? as u64)
 }
 
@@ -70,7 +70,7 @@ fn push_results(storage: &mut MetricDataStore, mut t0: SystemTime, stdout: &str)
         push_metric(
             &mut storage.iperf_bits_per_second,
             now,
-            get_f64(data, "bits_per_second"),
+            get_f64_integer(data, "bits_per_second"),
         );
         push_metric(
             &mut storage.iperf_retransmits,
