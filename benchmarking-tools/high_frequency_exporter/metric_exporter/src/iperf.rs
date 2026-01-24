@@ -20,7 +20,7 @@ fn get_u64(data: &Map<String, Value>, key: &str) -> Option<u64> {
     data.get(key).and_then(|x| x.as_u64())
 }
 
-fn get_f64(data: &Map<String, Value>, key: &str) -> Option<u64> {
+fn get_f64_integer(data: &Map<String, Value>, key: &str) -> Option<u64> {
     Some(data.get(key).and_then(|x| x.as_f64())? as u64)
 }
 
@@ -70,7 +70,7 @@ fn push_results(storage: &mut MetricDataStore, mut t0: SystemTime, stdout: &str)
         push_metric(
             &mut storage.iperf_bits_per_second,
             now,
-            get_f64(data, "bits_per_second"),
+            get_f64_integer(data, "bits_per_second"),
         );
         push_metric(
             &mut storage.iperf_retransmits,
@@ -101,16 +101,17 @@ pub async fn make_iperf3_benchmark(
         .arg("--port")
         .arg(config.destination_port.to_string())
         .arg("--time")
-        .arg(DURATION_IPERF.to_string()) // Run for 60 seconds
+        .arg(DURATION_IPERF.as_secs().to_string())
         .arg("--json") // Output in JSON format
         .output()
         .await?;
 
     if !output.status.success() {
         return Err(eyre::eyre!(
-            "iperf3 command failed with status '{}' and stderr: {}",
+            "iperf3 command failed with status '{}' and stderr: {} and stdout: {}",
             output.status,
-            String::from_utf8_lossy(&output.stderr)
+            String::from_utf8_lossy(&output.stderr),
+            String::from_utf8_lossy(&output.stdout)
         ));
     }
 

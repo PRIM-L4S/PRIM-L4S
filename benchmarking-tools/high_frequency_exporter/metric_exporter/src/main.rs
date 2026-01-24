@@ -41,9 +41,14 @@ async fn main() -> Result<()> {
         destination_port,
     };
 
+    tokio::spawn(loop_gathering::loop_gathering(
+        data_store.clone(),
+        sender_port,
+        destination_port,
+    ));
+
     join!(
         loop_sending::loop_sending(data_store.clone(), &metric_server_url),
-        loop_gathering::loop_gathering(data_store.clone(), sender_port, destination_port),
         loop_iperf::loop_iperf(data_store, &iperf3_config),
     );
 

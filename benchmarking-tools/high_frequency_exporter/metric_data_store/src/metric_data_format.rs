@@ -28,7 +28,7 @@ impl MetricDataFormat {
     }
 
     pub fn push(&mut self, timestamp: u128, value: u64) {
-        if self.values.len() > 0 && self.values[self.values.len() - 1] == value {
+        if self.values.last() == Some(&value) {
             // Skip duplicate values to reduce data size
             return;
         }
