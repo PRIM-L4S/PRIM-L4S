@@ -42,7 +42,6 @@ make down
 
 ## Access prometheus web UI
 
-
 - Open SSH tunnel with forwarding:
 
 ```sh
@@ -87,4 +86,22 @@ Or use `-i <interface>` to record only a specific interface.
 traceroute to 172.20.2.10 (172.20.2.10), 30 hops max, 60 byte packets
  1  router.iperf3_iperf-client-net (172.20.1.11)  0.293 ms  0.044 ms  0.042 ms
  2  172.20.2.10 (172.20.2.10)  0.311 ms  0.177 ms  0.184 ms
+```
+
+## Labeling per congestion control
+
+Some useful PromQL requests to analyse metrics.
+
+- Add a label for the congestion control
+
+```
+label_replace(ss_bytes_sent, "congestion", "$1", "host", "([a-zA-Z]+).*")
+```
+
+- Compute average per congestion control
+
+```
+avg by (congestion) (
+  label_replace(ss_bytes_sent, "congestion", "$1", "host", "([a-zA-Z]+).*")
+)
 ```
