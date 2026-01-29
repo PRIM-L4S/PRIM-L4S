@@ -13,7 +13,6 @@ mod iperf;
 mod loop_gathering;
 mod loop_iperf;
 mod loop_sending;
-mod socket_statistics;
 mod utils;
 
 #[tokio::main]

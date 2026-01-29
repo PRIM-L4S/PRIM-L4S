@@ -34,7 +34,7 @@ pub struct TcpInfo {
     pub tcpi_rcv_rtt: u32,
     pub tcpi_rcv_space: u32,
     pub tcpi_total_retrans: u32,
-    // Added code here
+
     pub tcpi_pacing_rate: u64,
     pub tcpi_max_pacing_rate: u64,
     pub tcpi_bytes_acked: u64, /* RFC4898 tcpEStatsAppHCThruOctetsAcked */

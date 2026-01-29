@@ -3,8 +3,8 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use tokio::sync::Mutex;
 
-use crate::socket_statistics::{SockStatError, SocketStatistics};
 use crate::{constants::INTERVAL_GATHERING, data_store::MetricDataStore};
+use socket_statistics::{SockStatError, SocketStatistics};
 
 /// Gathers socket statistics in a loop at high frequency
 pub async fn loop_gathering(
@@ -12,7 +12,8 @@ pub async fn loop_gathering(
     sender_port: u16,
     destination_port: u16,
 ) {
-    let mut socket_stats = SocketStatistics::new(sender_port, destination_port);
+    let mut socket_stats =
+        SocketStatistics::new(sender_port, destination_port, "iperf3".to_string());
     let mut number_of_samples: u64 = 0;
 
     // let mut time_worked = Duration::default();
@@ -47,7 +48,7 @@ pub async fn loop_gathering(
                 // time_worked += work_start.elapsed();
             }
             // This error is expected when the iperf3 benchmark is not running yet
-            Err(SockStatError::NoMatchingSocket) => {
+            Err(SockStatError::NoMatchingSocket(_)) => {
                 // time_worked_useless += work_start.elapsed();
             }
             Err(err) => {
