@@ -1,8 +1,6 @@
 use std::fmt;
-use std::io::Error;
 use std::mem::size_of;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
-use tokio::process::Command;
 
 use crate::socket_statistics::tcp_info::TcpInfo;
 
@@ -11,19 +9,24 @@ pub struct SocketStatistics {
     destination_port: u16,
     result: TcpInfo,
     fd: Option<OwnedFd>,
+    process_name: String,
 }
 
+#[derive(Debug)]
 pub enum SockStatError {
     SocketNotEstablished(u8),
-    NoMatchingSocket,
-    TooManyMatchingSockets,
+    NoMatchingSocket(String),
     Other(eyre::Error),
 }
+
+impl std::error::Error for SockStatError {}
 
 impl fmt::Display for SockStatError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SockStatError::NoMatchingSocket => write!(f, "No matching socket found"),
+            SockStatError::NoMatchingSocket(info) => {
+                write!(f, "No matching socket found: {}", info)
+            }
             SockStatError::SocketNotEstablished(state) => {
                 write!(
                     f,
@@ -31,21 +34,19 @@ impl fmt::Display for SockStatError {
                     state
                 )
             }
-            SockStatError::TooManyMatchingSockets => {
-                write!(f, "Multiple matching sockets found")
-            }
             SockStatError::Other(err) => write!(f, "Other error: {}", err),
         }
     }
 }
 
 impl SocketStatistics {
-    pub fn new(source_port: u16, destination_port: u16) -> Self {
+    pub fn new(source_port: u16, destination_port: u16, process_name: String) -> Self {
         SocketStatistics {
             source_port,
             destination_port,
             fd: None,
             result: Default::default(),
+            process_name,
         }
     }
 
@@ -76,7 +77,7 @@ impl SocketStatistics {
             self.fd = None;
             return Err(SockStatError::Other(eyre::eyre!(
                 "getsockopt TCP_INFO failed: {}",
-                Error::last_os_error()
+                std::io::Error::last_os_error()
             )));
         }
 
@@ -90,37 +91,114 @@ impl SocketStatistics {
         Ok(())
     }
 
-    pub async fn update_fd(&mut self) -> Result<(), SockStatError> {
-        // Find PID and FD of iperf3 connecting source_port -> destination_port using lsof
-        // TODO: Replace this with a more efficient method
-        let lsof_command = format!(
-            "lsof -P -n -i :{} | grep iperf3 | grep :{} | awk '{{print $2, $4}}' | head -n 1",
-            self.source_port, self.destination_port
-        );
+    /// Searches /proc/net/tcp or /proc/net/tcp6 for a socket matching the source and destination ports
+    ///
+    /// Returns the inode number of the matching socket if found
+    async fn find_inode_in_proc(&self, path: &str) -> Option<u64> {
+        let content = tokio::fs::read_to_string(path).await.ok()?;
+        for line in content.lines().skip(1) {
+            let cols: Vec<&str> = line.split_whitespace().collect();
+            if cols.len() < 10 {
+                continue;
+            }
 
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(&lsof_command)
-            .output()
+            let local_ip_port = cols[1];
+            let remote_ip_port = cols[2];
+            let inode_str = cols[9];
+            let inode = match inode_str.parse::<u64>() {
+                Err(_) => continue,
+                Ok(0) => continue,
+                Ok(i) => i,
+            };
+
+            let parse_port = |s: &str| -> Option<u16> {
+                let parts: Vec<&str> = s.split(':').collect();
+                if parts.len() != 2 {
+                    return None;
+                }
+                u16::from_str_radix(parts[1], 16).ok()
+            };
+
+            let local_port = parse_port(local_ip_port)?;
+            let remote_port = parse_port(remote_ip_port)?;
+
+            if (local_port == self.source_port && remote_port == self.destination_port)
+                || (local_port == self.destination_port && remote_port == self.source_port)
+            {
+                return Some(inode);
+            }
+        }
+
+        None
+    }
+
+    /// Searches /proc for a process with the given name that has a socket with the given inode
+    ///
+    /// Returns the (PID, FD) tuple if found
+    async fn find_pid_fd(&self, inode: u64) -> Result<(i32, i32), SockStatError> {
+        let mut entries = tokio::fs::read_dir("/proc")
             .await
-            .map_err(|e| SockStatError::Other(eyre::eyre!("Failed to execute lsof: {}", e)))?;
+            .map_err(|e| SockStatError::Other(eyre::eyre!("Failed to read /proc: {}", e)))?;
 
-        let s = String::from_utf8_lossy(&output.stdout);
-        let parts: Vec<&str> = s.split_whitespace().collect();
-        if parts.len() < 2 {
-            return Err(SockStatError::NoMatchingSocket);
-        }
-        if parts.len() > 2 {
-            return Err(SockStatError::TooManyMatchingSockets);
-        }
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let file_name = entry.file_name();
+            let pid_str = file_name.to_string_lossy();
 
-        let pid: i32 = parts[0].parse().map_err(|e| {
-            SockStatError::Other(eyre::eyre!("Failed to parse PID from lsof output: {}", e))
-        })?;
-        let target_fd_str = parts[1].trim_matches(|c: char| !c.is_numeric());
-        let target_fd: i32 = target_fd_str.parse().map_err(|e| {
-            SockStatError::Other(eyre::eyre!("Failed to parse FD from lsof output: {}", e))
-        })?;
+            if let Ok(pid) = pid_str.parse::<i32>() {
+                // Check if process name matches
+                let comm_path = format!("/proc/{}/comm", pid);
+                if let Ok(comm) = tokio::fs::read_to_string(&comm_path).await {
+                    if comm.trim() != self.process_name {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+
+                // Scan FDs
+                let fd_path = format!("/proc/{}/fd", pid);
+                let mut fd_entries = match tokio::fs::read_dir(&fd_path).await {
+                    Ok(e) => e,
+                    Err(_) => continue,
+                };
+
+                while let Ok(Some(fd_entry)) = fd_entries.next_entry().await {
+                    if let Ok(target) = tokio::fs::read_link(fd_entry.path()).await {
+                        let target_str = target.to_string_lossy();
+
+                        if target_str == format!("socket:[{}]", inode) {
+                            if let Ok(fd) = fd_entry.file_name().to_string_lossy().parse::<i32>() {
+                                return Ok((pid, fd));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Err(SockStatError::NoMatchingSocket(format!(
+            "No process named '{}' with socket inode {} found",
+            self.process_name, inode
+        )))
+    }
+
+    /// Updates the internal file descriptor to point to the target socket
+    ///
+    /// This function is automatically called by get_socket_infos() when needed
+    /// But can also be called manually at any time
+    /// The result is cached until the socket is closed
+    pub async fn update_fd(&mut self) -> Result<(), SockStatError> {
+        // Find inode first
+        let inode = if let Some(i) = self.find_inode_in_proc("/proc/net/tcp").await {
+            i
+        } else if let Some(i) = self.find_inode_in_proc("/proc/net/tcp6").await {
+            i
+        } else {
+            return Err(SockStatError::NoMatchingSocket(format!(
+                "No matching socket inode found in /proc/net/tcp or /proc/net/tcp6"
+            )));
+        };
+
+        let (pid, target_fd) = self.find_pid_fd(inode).await?;
 
         // Open a file descriptor referring to the process
         let pidfd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };
@@ -128,7 +206,7 @@ impl SocketStatistics {
             return Err(SockStatError::Other(eyre::eyre!(
                 "pidfd_open failed for PID {}: {}",
                 pid,
-                Error::last_os_error()
+                std::io::Error::last_os_error()
             )));
         }
         let pidfd = unsafe { OwnedFd::from_raw_fd(pidfd as i32) };
@@ -141,7 +219,7 @@ impl SocketStatistics {
                 "pidfd_getfd failed for PID {} FD {}: {}",
                 pid,
                 target_fd,
-                Error::last_os_error()
+                std::io::Error::last_os_error()
             )));
         }
         let stolen_fd = unsafe { OwnedFd::from_raw_fd(stolen_fd as i32) };
