@@ -1,10 +1,19 @@
 sudo modprobe sch_dualpi2
 sudo modprobe tcp_prague
 sudo modprobe tcp_bbr
+sudo modprobe ifb
+sudo modprobe sch_netem
+sudo modprobe sch_htb
+sudo modprobe act_mirred
+
 
 echo "sch_dualpi2" | sudo tee /etc/modules-load.d/dualpi2.conf
 echo "tcp_prague" | sudo tee /etc/modules-load.d/prague.conf
 echo "tcp_bbr" | sudo tee /etc/modules-load.d/bbr.conf
+echo "ifb" | sudo tee /etc/modules-load.d/ifb.conf
+echo "sch_netem" | sudo tee /etc/modules-load.d/netem.conf
+echo "sch_htb" | sudo tee /etc/modules-load.d/htb.conf
+echo "act_mirred" | sudo tee /etc/modules-load.d/mirred.conf
 
 # TODO?
 # some preparations for having better paced traffic and reduce bursts for each network interface $NETIF that sends L4S traffic

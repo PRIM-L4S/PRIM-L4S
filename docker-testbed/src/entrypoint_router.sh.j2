@@ -22,16 +22,48 @@ echo "Router ready"
 
 {% if router.max_bandwidth %}
 # Add bandwidth limiting to DUALPI2 - limit forwarded traffic to 1kbit
-# Remove the old qdiscs and add new ones with bandwidth control
-tc qdisc del dev $NETIF0 root
-tc qdisc del dev $NETIF1 root
+NETIF0=eth0
+NETIF1=eth1
+IFB0=ifb0
+IFB1=ifb1
 
-# TBF for bandwidth limiting, NETEM for delay, and DUALPI2 for AQM
-tc qdisc add dev $NETIF0 root handle 1: tbf rate {{ router.max_bandwidth }} burst 32kbit latency 10ms
-tc qdisc add dev $NETIF0 parent 1:1 handle 10: dualpi2
+# cleanup
+tc qdisc del dev $NETIF0 clsact 2>/dev/null || true
+tc qdisc del dev $NETIF1 clsact 2>/dev/null || true
+tc qdisc del dev $NETIF0 root 2>/dev/null || true
+tc qdisc del dev $NETIF1 root 2>/dev/null || true
+tc qdisc del dev $IFB0 root 2>/dev/null || true
+tc qdisc del dev $IFB1 root 2>/dev/null || true
 
-tc qdisc add dev $NETIF1 root handle 2: tbf rate {{ router.max_bandwidth }} burst 32kbit latency 10ms
-tc qdisc add dev $NETIF1 parent 2:1 handle 20: dualpi2
+# create IFBs
+ip link add $IFB0 type ifb 2>/dev/null || true
+ip link add $IFB1 type ifb 2>/dev/null || true
+ip link set $IFB0 up
+ip link set $IFB1 up
+
+# ingress redirect A->ifb0 and B->ifb1
+tc qdisc add dev $NETIF0 clsact
+tc filter add dev $NETIF0 ingress matchall action mirred egress redirect dev $IFB0
+
+tc qdisc add dev $NETIF1 clsact
+tc filter add dev $NETIF1 ingress matchall action mirred egress redirect dev $IFB1
+
+# delay on both directions (on the IFBs)
+tc qdisc add dev $IFB0 root handle 100: netem delay {{ router.delay_config }} distribution normal limit 1000
+tc qdisc add dev $IFB1 root handle 200: netem delay {{ router.delay_config }} distribution normal limit 1000
+
+# bottleneck on B egress (A->B direction)
+tc qdisc add dev $NETIF1 root handle 1: htb default 10
+tc class add dev $NETIF1 parent 1: classid 1:10 htb rate {{ router.max_bandwidth }} ceil {{ router.max_bandwidth }}
+tc qdisc add dev $NETIF1 parent 1:10 handle 10: dualpi2
+
+# bottleneck on A egress (B->A direction)
+tc qdisc add dev $NETIF0 root handle 2: htb default 20
+tc class add dev $NETIF0 parent 2: classid 2:20 htb rate {{ router.max_bandwidth }} ceil {{ router.max_bandwidth }}
+tc qdisc add dev $NETIF0 parent 2:20 handle 20: dualpi2
+
+ethtool -K $NETIF0 gro off gso off tso off
+ethtool -K $NETIF1 gro off gso off tso off
 {% endif %}
 
 echo "Router bandwidth limited to {{ router.max_bandwidth }} kbit/s, delay {{ router.delay_config }}"
