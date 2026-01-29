@@ -3,8 +3,17 @@ name = "socket_statistics"
 version = "0.1.0"
 edition = "2024"
 authors = ["Thomas Sauvage", "Emre Ucar", "Timothée Fisher"]
+description = "A library to retrieve socket statistics on Linux systems"
 
 [dependencies]
 eyre = "0.6.12"
 libc = "0.2.180"
 tokio = { version = "1.49.0", features = ["full"] }
+
+[[bin]]
+name = "bench_update_fd"
+path = "benchmarks/update_fd.rs"
+
+[[bin]]
+name = "bench_get_socket_infos"
+path = "benchmarks/get_socket_infos.rs"

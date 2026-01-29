@@ -1,15 +1,18 @@
-use super::SocketStatistics;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
+use std::time::Instant;
 use tokio::net::TcpListener;
 
-#[tokio::test]
-async fn test_socket_statistics() {
+use eyre::Result;
+use socket_statistics::SocketStatistics;
+
+const NUMBER_OF_ITERATIONS: u32 = 1000;
+
+#[tokio::main]
+async fn main() -> Result<()> {
     // Start a TCP listener on a random port to act as the server
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .await
-        .expect("Failed to bind listener");
-    let local_addr = listener.local_addr().expect("Failed to get local addr");
+    let listener = TcpListener::bind("127.0.0.1:0").await?;
+    let local_addr = listener.local_addr()?;
     let server_port = local_addr.port();
 
     // Start a python process that connects to this port
@@ -21,7 +24,7 @@ async fn test_socket_statistics() {
          print(s.getsockname()[1]); \
          sys.stdout.flush(); \
          s.send(b'x' * 42); \
-         time.sleep(10)",
+         time.sleep(1000)",
         server_port
     );
 
@@ -29,19 +32,41 @@ async fn test_socket_statistics() {
         .arg("-c")
         .arg(&python_code)
         .stdout(Stdio::piped())
-        .spawn()
-        .expect("Failed to spawn python process");
+        .spawn()?;
 
     // Read the client port from python's stdout
     // This ensures the connection is established before we try to find it
-    let child_stdout = child.stdout.take().expect("Failed to open stdout");
+    let child_stdout = child
+        .stdout
+        .take()
+        .ok_or(eyre::eyre!("Failed to open stdout"))?;
     let mut reader = BufReader::new(child_stdout);
     let mut line = String::new();
-    reader.read_line(&mut line).expect("Failed to read line");
-    let client_port: u16 = line.trim().parse().expect("Failed to parse client port");
+    reader.read_line(&mut line)?;
+    let client_port: u16 = line.trim().parse()?;
 
     // Create SocketStatistics spying on "python3"
     let mut stats = SocketStatistics::new(client_port, server_port, "python3".to_string());
+
+    // ================ Benchmarked Code ================
+
+    stats.update_fd().await?;
+
+    let start = Instant::now();
+
+    for _ in 0..NUMBER_OF_ITERATIONS {
+        let _ = stats.get_socket_infos().await;
+    }
+
+    let duration = start.elapsed();
+
+    println!(
+        "Average time per get_socket_infos(): {:?}",
+        duration / NUMBER_OF_ITERATIONS
+    );
+
+    // ===================================================
+
     let info = stats.get_socket_infos().await;
 
     // Clean up child process
@@ -57,4 +82,6 @@ async fn test_socket_statistics() {
             );
         }
     }
+
+    Ok(())
 }
