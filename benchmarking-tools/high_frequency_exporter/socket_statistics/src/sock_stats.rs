@@ -2,7 +2,7 @@ use std::fmt;
 use std::mem::size_of;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 
-use crate::socket_statistics::tcp_info::TcpInfo;
+use crate::tcp_info::TcpInfo;
 
 pub struct SocketStatistics {
     source_port: u16,

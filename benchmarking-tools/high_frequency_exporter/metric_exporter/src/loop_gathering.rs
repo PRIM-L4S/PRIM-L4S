@@ -3,8 +3,8 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use tokio::sync::Mutex;
 
-use crate::socket_statistics::{SockStatError, SocketStatistics};
 use crate::{constants::INTERVAL_GATHERING, data_store::MetricDataStore};
+use socket_statistics::{SockStatError, SocketStatistics};
 
 /// Gathers socket statistics in a loop at high frequency
 pub async fn loop_gathering(

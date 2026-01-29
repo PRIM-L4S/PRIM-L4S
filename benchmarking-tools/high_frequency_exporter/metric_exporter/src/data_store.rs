@@ -1,5 +1,4 @@
-use metric_data_store::MetricDataFormat;
-use metric_data_store_derive::ToImportFormat;
+use metric_data_store::{MetricDataFormat, ToImportFormat};
 
 #[derive(ToImportFormat, Debug)]
 pub struct MetricDataStore {
