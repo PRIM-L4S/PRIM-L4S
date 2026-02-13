@@ -55,6 +55,8 @@ services:
         ipv4_address: 172.20.1.2
       iperf-server-net:
         ipv4_address: 172.20.2.2
+      metrics-net:
+        ipv4_address: 172.20.3.2
 
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.133.0
@@ -63,13 +65,17 @@ services:
       - "-storageDataPath=/victoria-metrics-data"
       - "-retentionPeriod=100y"  # keep the data 100 years
       - "-search.cacheTimestampOffset=1h" # This is required as we use backdated timestamps for bulk inserts
+      - "-promscrape.config=/etc/victoria-metrics/prometheus.yml"
     volumes:
+      - ./prometheus.yml:/etc/victoria-metrics/prometheus.yml
       - victoria_data:/victoria-metrics-data
     ports:
       - "8428:8428"
     networks:
       iperf-client-net:
         ipv4_address: 172.20.1.3
+      metrics-net:
+        ipv4_address: 172.20.3.3
 
 networks:
   iperf-client-net:
@@ -85,6 +91,13 @@ networks:
       config:
         - subnet: 172.20.2.0/24
           gateway: 172.20.2.1
+
+  metrics-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.3.0/24
+          gateway: 172.20.3.1
 
 volumes:
   victoria_data:
