@@ -2,3 +2,4 @@
 .venv/
 docker-testbed/dist
 target/
+NOTES.md

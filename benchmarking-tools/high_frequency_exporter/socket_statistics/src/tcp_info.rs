@@ -71,7 +71,8 @@ pub struct TcpInfo {
     pub tcpi_total_rto: u16, /* Total number of RTO timeouts, including SYN/SYN-ACK and recurring timeouts. */
     pub tcpi_total_rto_recoveries: u16, /* Total number of RTO recoveries, including any unfinished recovery. */
     pub tcpi_total_rto_time: u32, /* Total time spent in RTO recoveries in milliseconds, including any unfinished recovery. */
-    pub tcpi_received_ce: u32,    /* # of CE marks received */
+    // Everything below this doesn't exist on older kernels such as the one on L4S2 server
+    pub tcpi_received_ce: u32,        /* # of CE marks received */
     pub tcpi_delivered_e1_bytes: u32, /* Accurate ECN byte counters */
     pub tcpi_delivered_e0_bytes: u32,
     pub tcpi_delivered_ce_bytes: u32,
