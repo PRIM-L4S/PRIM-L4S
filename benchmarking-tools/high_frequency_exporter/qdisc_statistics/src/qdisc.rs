@@ -10,7 +10,7 @@ use rtnetlink::{
 
 #[derive(Debug)]
 pub struct QdiscInterfaceStatistics {
-    pub name: String,
+    pub index: usize,
     /// number of seen bytes
     pub bytes: Option<u64>,
     /// number of seen packets
@@ -31,21 +31,14 @@ const TC_H_ROOT: u32 = 0xFFFF_FFFF;
 
 pub struct QdiscStatistics {
     handle: Handle,
-    interface_names: Vec<String>,
 }
 
 impl QdiscStatistics {
     pub async fn new() -> Self {
         let (connection, handle, _messages) = rtnetlink::new_connection().unwrap();
         tokio::spawn(connection);
-        let interface_names = get_interface_names(&handle)
-            .await
-            .unwrap_or_else(|_| vec![]);
 
-        Self {
-            handle,
-            interface_names,
-        }
+        Self { handle }
     }
 
     fn process_qdisc_message(&self, message: TcMessage) -> Option<QdiscInterfaceStatistics> {
@@ -76,7 +69,7 @@ impl QdiscStatistics {
         }
 
         Some(QdiscInterfaceStatistics {
-            name: self.interface_names[header.index as usize].to_owned(),
+            index: header.index as usize,
             bytes: basic.and_then(|basic| Some(basic.bytes)),
             packets: basic.and_then(|basic| Some(basic.packets)),
             qlen: queue.and_then(|queue| Some(queue.qlen)),
@@ -100,40 +93,43 @@ impl QdiscStatistics {
             .flatten()
             .collect())
     }
-}
 
-async fn get_interface_names(handle: &Handle) -> Result<Vec<String>> {
-    let links = handle.link().get().execute();
+    pub async fn get_interface_names(&self) -> Result<Vec<String>> {
+        let links = self.handle.link().get().execute();
 
-    let messages: Vec<LinkMessage> = links.try_collect().await?;
+        let messages: Vec<LinkMessage> = links.try_collect().await?;
 
-    let interfaces: Vec<(String, usize)> = messages
-        .into_iter()
-        .map(|message| {
-            let index = message.header.index as usize;
-            let name = message
-                .attributes
-                .into_iter()
-                .find_map(|attribute| match attribute {
-                    rtnetlink::packet_route::link::LinkAttribute::IfName(name) => Some(name),
-                    _ => None,
-                })?;
+        let interfaces: Vec<(String, usize)> = messages
+            .into_iter()
+            .map(|message| {
+                let index = message.header.index as usize;
+                let name =
+                    message
+                        .attributes
+                        .into_iter()
+                        .find_map(|attribute| match attribute {
+                            rtnetlink::packet_route::link::LinkAttribute::IfName(name) => {
+                                Some(name)
+                            }
+                            _ => None,
+                        })?;
 
-            Some((name, index))
-        })
-        .flatten()
-        .collect();
+                Some((name, index))
+            })
+            .flatten()
+            .collect();
 
-    let max_index = *interfaces
-        .iter()
-        .map(|(_, index)| index)
-        .max()
-        .unwrap_or_else(|| &0) as usize;
+        let max_index = *interfaces
+            .iter()
+            .map(|(_, index)| index)
+            .max()
+            .unwrap_or_else(|| &0) as usize;
 
-    let mut interface_names = vec!["?".into(); max_index + 1];
-    for (name, index) in interfaces {
-        interface_names[index] = name;
+        let mut interface_names = vec!["?".into(); max_index + 1];
+        for (name, index) in interfaces {
+            interface_names[index] = name;
+        }
+
+        Ok(interface_names)
     }
-
-    Ok(interface_names)
 }
