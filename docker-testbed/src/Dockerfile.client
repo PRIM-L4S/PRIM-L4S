@@ -1,6 +1,6 @@
 # ================== Chef install stage ==================
 # To reduce build times
-FROM rust:1.92.0-trixie AS chef-install
+FROM rust:1-trixie AS chef-install
 
 RUN cargo install cargo-chef --locked
 
@@ -25,7 +25,7 @@ COPY high_frequency_exporter/ .
 RUN cargo build --release
 
 # =============== Base of the runner stage ===============
-FROM debian:13.1 AS base-runner
+FROM debian:13 AS base-runner
 
 RUN apt-get update && apt-get install -y iproute2 ethtool iperf3 lsof iputils-ping
 
