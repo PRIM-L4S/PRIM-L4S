@@ -69,4 +69,4 @@ ethtool -K $NETIF1 gro off gso off tso off
 echo "Router bandwidth limited to {{ router.max_bandwidth }} kbit/s, delay {{ router.delay_config }}"
 
 # Start node_exporter with qdisc collector enabled
-exec node_exporter --collector.disable-defaults --collector.qdisc
+exec /app/router_exporter
