@@ -1,0 +1,10 @@
+[package]
+name = "qdisc_statistics"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eyre = "0.6.12"
+futures-util = "0.3.32"
+rtnetlink = "0.20.0"
+tokio = "1.49.0"
