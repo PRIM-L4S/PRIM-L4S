@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
     let data_store = Arc::new(Mutex::new(
         interface_names
             .into_iter()
-            .map(|name| MetricDataStore::new(name))
+            .map(|name| MetricDataStore::new(name, None))
             .collect(),
     ));
 
