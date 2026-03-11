@@ -20,6 +20,7 @@ async fn main() -> Result<()> {
     color_eyre::install()?;
 
     let client_name = env_str("CLIENT_NAME")?;
+    let congestion_algorithm = env_str("CONGESTION_ALGORITHM")?;
     let metric_server_url = env_str("METRIC_SERVER_URL")?;
     let sender_port = env_u16("SENDER_PORT")?;
     let destination_address = env_str("DESTINATION_ADDRESS")?;
@@ -32,7 +33,10 @@ async fn main() -> Result<()> {
         std::process::exit(0);
     })?;
 
-    let data_store = Arc::new(Mutex::new(MetricDataStore::new(client_name)));
+    let data_store = Arc::new(Mutex::new(MetricDataStore::new(
+        client_name,
+        congestion_algorithm,
+    )));
 
     let iperf3_config = iperf::Iperf3Config {
         sender_port,

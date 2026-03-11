@@ -88,20 +88,16 @@ traceroute to 172.20.2.10 (172.20.2.10), 30 hops max, 60 byte packets
  2  172.20.2.10 (172.20.2.10)  0.311 ms  0.177 ms  0.184 ms
 ```
 
-## Labeling per congestion control
+## PromQL requests
 
 Some useful PromQL requests to analyse metrics.
 
-- Add a label for the congestion control
+- See the list of metrics available: [data_store.rs](../benchmarking-tools/high_frequency_exporter/metric_exporter/src/data_store.rs)
 
-```
-label_replace(ss_bytes_sent, "congestion", "$1", "host", "([a-zA-Z]+).*")
-```
-
-- Compute average per congestion control
+- Share of acknowledged bytes among congestion levels
 
 ```
 avg by (congestion) (
-  label_replace(ss_bytes_sent, "congestion", "$1", "host", "([a-zA-Z]+).*")
+  ss_bytes_acked / ss_bytes_sent
 )
 ```

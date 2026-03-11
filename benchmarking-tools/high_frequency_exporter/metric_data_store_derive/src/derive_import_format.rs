@@ -33,7 +33,7 @@ pub fn to_import_format_derive(input: TokenStream) -> TokenStream {
         let field_name_formatted = field_name.as_ref().unwrap().to_string();
 
         quote! {
-            #field_name: MetricDataFormat::new(#field_name_formatted, &host),
+            #field_name: MetricDataFormat::new(#field_name_formatted, &host, &congestion),
         }
     });
 
@@ -58,7 +58,7 @@ pub fn to_import_format_derive(input: TokenStream) -> TokenStream {
     quote! {
 
     impl #ident {
-        pub fn new(host: String) -> Self {
+        pub fn new(host: String, congestion: String) -> Self {
             #ident {
                 #(#new_fields)*
             }

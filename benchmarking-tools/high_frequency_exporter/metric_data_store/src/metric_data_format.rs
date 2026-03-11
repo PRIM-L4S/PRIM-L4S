@@ -13,14 +13,17 @@ struct MetricLabels {
     __name__: String,
     /// The name of the client
     host: String,
+    /// The congestion control algorithm in use, e.g. "cubic" or "prague"
+    congestion: String,
 }
 
 impl MetricDataFormat {
-    pub fn new(metric_name: &str, host: &str) -> Self {
+    pub fn new(metric_name: &str, host: &str, congestion: &str) -> Self {
         MetricDataFormat {
             metric: MetricLabels {
                 __name__: metric_name.to_string(),
                 host: host.to_string(),
+                congestion: congestion.to_string(),
             },
             timestamps: Vec::new(),
             values: Vec::new(),
