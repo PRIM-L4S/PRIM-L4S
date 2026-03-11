@@ -1,14 +1,45 @@
-FROM debian:12.12
+# ================== Chef install stage ==================
+# To reduce build times
+FROM rust:1-trixie AS chef-install
+
+RUN cargo install cargo-chef --locked
+
+# ================== Chef prepare stage ==================
+FROM chef-install AS chef-prepare
+
+WORKDIR /app/
+COPY high_frequency_exporter/ .
+
+RUN cargo chef prepare --recipe-path recipe.json
+
+# ===================== Build stage ======================
+FROM chef-install AS builder
+
+WORKDIR /app/
+COPY --from=chef-prepare /app/recipe.json recipe.json
+
+RUN cargo chef cook --release --recipe-path recipe.json
+
+COPY high_frequency_exporter/ .
+
+RUN cargo build --release
+
+# =============== Base of the runner stage ===============
+FROM debian:13 AS base-runner
 
 # Install iptables package for NAT and routing
-RUN apt-get update && apt-get install -y iproute2 ethtool iptables iputils-ping
+RUN apt-get update && apt-get install -y iproute2 ethtool lsof iptables iputils-ping ca-certificates
+
+# ==================== Runner stage ======================
+FROM base-runner AS runner
+
+WORKDIR /app/
+
+COPY --from=builder /app/target/release/router_exporter router_exporter
 
 # Copy the entrypoint script into the container
 COPY entrypoint_router.sh /root/entrypoint_router.sh
 RUN chmod +x /root/entrypoint_router.sh
-
-# Copy the node_exporter binary into the container
-COPY node_exporter/node_exporter /usr/local/bin/node_exporter
 
 WORKDIR /root
 

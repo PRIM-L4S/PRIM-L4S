@@ -57,6 +57,8 @@ services:
         ipv4_address: 172.20.2.2
       metrics-net:
         ipv4_address: 172.20.3.2
+    environment:
+      - METRIC_SERVER_URL=http://victoriametrics:8428
 
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.133.0
