@@ -22,6 +22,7 @@ services:
       - DESTINATION_PORT=5201
       # Just used to set a fancy label in the exporter
       - CLIENT_NAME={{ name }}
+      - CONGESTION_ALGORITHM={{ config_name }}
     networks:
       iperf-client-net:
         ipv4_address: 172.20.1.{{ 10 + ns.instance_counter }}
