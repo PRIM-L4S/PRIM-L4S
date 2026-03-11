@@ -1,5 +1,7 @@
 #[derive(Debug, Default)]
 #[repr(C)]
+// See:
+// https://github.com/torvalds/linux/blob/b29fb8829bff243512bb8c8908fd39406f9fd4c3/include/uapi/linux/tcp.h#L247
 pub struct TcpInfo {
     pub tcpi_state: u8,
     pub tcpi_ca_state: u8,
