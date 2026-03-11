@@ -14,16 +14,17 @@ struct MetricLabels {
     /// The name of the client
     host: String,
     /// The congestion control algorithm in use, e.g. "cubic" or "prague"
-    congestion: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    congestion: Option<String>,
 }
 
 impl MetricDataFormat {
-    pub fn new(metric_name: &str, host: &str, congestion: &str) -> Self {
+    pub fn new(metric_name: &str, host: &str, congestion: &Option<String>) -> Self {
         MetricDataFormat {
             metric: MetricLabels {
                 __name__: metric_name.to_string(),
                 host: host.to_string(),
-                congestion: congestion.to_string(),
+                congestion: congestion.to_owned(),
             },
             timestamps: Vec::new(),
             values: Vec::new(),

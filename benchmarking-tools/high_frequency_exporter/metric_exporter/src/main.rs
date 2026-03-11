@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
 
     let data_store = Arc::new(Mutex::new(MetricDataStore::new(
         client_name,
-        congestion_algorithm,
+        Some(congestion_algorithm),
     )));
 
     let iperf3_config = iperf::Iperf3Config {

@@ -58,7 +58,7 @@ pub fn to_import_format_derive(input: TokenStream) -> TokenStream {
     quote! {
 
     impl #ident {
-        pub fn new(host: String, congestion: String) -> Self {
+        pub fn new(host: String, congestion: Option<String>) -> Self {
             #ident {
                 #(#new_fields)*
             }
