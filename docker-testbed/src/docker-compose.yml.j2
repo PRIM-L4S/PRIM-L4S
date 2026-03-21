@@ -43,6 +43,7 @@ services:
 {% set ns.instance_counter = ns.instance_counter + 1 %}
 {% endfor %}
 
+{% if router.enable is not defined or router.enable %}
   router:
     container_name: router
     build:
@@ -60,6 +61,7 @@ services:
         ipv4_address: 172.20.3.2
     environment:
       - METRIC_SERVER_URL=http://victoriametrics:8428
+{% endif %}
 
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.133.0
