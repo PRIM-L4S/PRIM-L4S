@@ -9,26 +9,27 @@ import pandas as pd
 
 VICTORIA_METRICS_URL = "http://localhost:8428"
 
-METRICS = [
+ALL_METRICS = [
     "ss_snd_cwnd",
     "ss_snd_ssthresh",
     "ss_bytes_sent",
-#     "ss_bytes_retrans",
-#     "ss_bytes_acked",
-#     "ss_delivery_rate",
-#     "ss_rtt",
-#     "ss_rttvar",
-#    # "ss_number_of_samples",
-#     "iperf_bytes",
-#     "iperf_bits_per_second",
-#     "iperf_retransmits",
-#     "iperf_snd_cwnd",
-#     "iperf_snd_wnd",
-#     "iperf_rtt",
-#     "iperf_rttvar",
-#     "iperf_pmtu",
-#     "hfe_number_of_benchmarks",
+    "ss_bytes_retrans",
+    "ss_bytes_acked",
+    "ss_delivery_rate",
+    "ss_rtt",
+    "ss_rttvar",
+    # "ss_number_of_samples",
+    "iperf_bytes",
+    "iperf_bits_per_second",
+    "iperf_retransmits",
+    "iperf_snd_cwnd",
+    "iperf_snd_wnd",
+    "iperf_rtt",
+    "iperf_rttvar",
+    "iperf_pmtu",
+    "hfe_number_of_benchmarks",
 ]
+
 
 # JSON format type
 class Labels(TypedDict):
@@ -36,13 +37,16 @@ class Labels(TypedDict):
     host: str
     congestion: str
 
+
 class MetricData(TypedDict):
     metric: Labels
     timestamps: list[int]
     values: list[str]
 
 
-def download_metrics(start: datetime, end: datetime) -> pd.DataFrame:
+def download_metrics(
+    start: datetime, end: datetime, metrics: list[str] = ALL_METRICS
+) -> pd.DataFrame:
     """
     Download raw metrics defined in METRICS from VictoriaMetrics between start and end.
     Returns a pandas DataFrame containing all metrics data.
@@ -50,14 +54,14 @@ def download_metrics(start: datetime, end: datetime) -> pd.DataFrame:
     start_time = time.time()
     records = []
 
-    for metric in METRICS:
+    for metric in metrics:
         print(f"Downloading metric: {metric}... ", end="", flush=True)
         resp = requests.get(
             f"{VICTORIA_METRICS_URL}/api/v1/export",
             params={
                 "match[]": f'{{__name__="{metric}"}}',
                 "start": start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end":   end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end": end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             },
             stream=True,
         )
@@ -69,23 +73,25 @@ def download_metrics(start: datetime, end: datetime) -> pd.DataFrame:
                 continue
             metric_data: MetricData = json.loads(line)
             labels = metric_data["metric"]
-            
+
             timestamps = metric_data.get("timestamps", [])
             values = metric_data.get("values", [])
-            
+
             if not timestamps:
                 continue
 
-            series_df = pd.DataFrame({
-                "timestamp": timestamps,
-                "value": pd.to_numeric(values, downcast='float')
-            })
-            
-            # Broadcast scalar values
+            series_df = pd.DataFrame(
+                {
+                    "timestamp": timestamps,
+                    "value": pd.to_numeric(values, downcast="float"),
+                }
+            )
+
+            # Add labels as columns
             series_df["host"] = labels["host"]
             series_df["congestion"] = labels["congestion"]
             series_df["metric"] = labels["__name__"]
-            
+
             records.append(series_df)
 
         print("Imported.", flush=True)
@@ -97,6 +103,8 @@ def download_metrics(start: datetime, end: datetime) -> pd.DataFrame:
         raise ValueError("No metrics data found for the specified time range.")
 
     end_time = time.time()
-    print(f"Finished downloading and processing metrics in {end_time - start_time:.2f} seconds.")
-        
+    print(
+        f"Finished downloading and processing metrics in {end_time - start_time:.2f} seconds."
+    )
+
     return df
