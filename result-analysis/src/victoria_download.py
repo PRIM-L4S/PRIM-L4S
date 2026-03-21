@@ -41,66 +41,65 @@ class Labels(TypedDict):
 class MetricData(TypedDict):
     metric: Labels
     timestamps: list[int]
-    values: list[str]
+    values: list[int]
 
 
 def download_metrics(
     start: datetime, end: datetime, metrics: list[str] = ALL_METRICS
 ) -> pd.DataFrame:
     """
-    Download raw metrics defined in METRICS from VictoriaMetrics between start and end.
+    Download raw metrics from VictoriaMetrics between start and end.
     Returns a pandas DataFrame containing all metrics data.
     """
     start_time = time.time()
+
+    # Send a single request for all metrics
+    params = [
+        ("start", start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+        ("end", end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+    ]
+    for metric in metrics:
+        params.append(("match[]", f'{{__name__="{metric}"}}'))
+
+    print("Downloading metrics... ", end="", flush=True)
+    resp = requests.get(
+        f"{VICTORIA_METRICS_URL}/api/v1/export",
+        params=params,
+        stream=True,
+    )
+    resp.raise_for_status()
+    print("Downloaded.\nProcessing data... ", end="", flush=True)
+
     records = []
 
-    for metric in metrics:
-        print(f"Downloading metric: {metric}... ", end="", flush=True)
-        resp = requests.get(
-            f"{VICTORIA_METRICS_URL}/api/v1/export",
-            params={
-                "match[]": f'{{__name__="{metric}"}}',
-                "start": start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end": end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-            stream=True,
-        )
-        print("Downloaded. ", end="", flush=True)
-        resp.raise_for_status()
+    for line in resp.iter_lines():
+        if not line:
+            continue
 
-        for line in resp.iter_lines():
-            if not line:
-                continue
-            metric_data: MetricData = json.loads(line)
-            labels = metric_data["metric"]
+        metric_data: MetricData = json.loads(line)
+        timestamps = metric_data.get("timestamps", [])
+        values = metric_data.get("values", [])
 
-            timestamps = metric_data.get("timestamps", [])
-            values = metric_data.get("values", [])
+        if not timestamps:
+            continue
 
-            if not timestamps:
-                continue
+        labels = metric_data.get("metric", {})
 
-            series_df = pd.DataFrame(
-                {
-                    "timestamp": timestamps,
-                    "value": pd.to_numeric(values, downcast="float"),
-                }
-            )
+        chunk_df = pd.DataFrame({"timestamp": timestamps, "value": values})
 
-            # Add labels as columns
-            series_df["host"] = labels["host"]
-            series_df["congestion"] = labels["congestion"]
-            series_df["metric"] = labels["__name__"]
+        chunk_df["host"] = labels.get("host", "")
+        chunk_df["congestion"] = labels.get("congestion", "")
+        chunk_df["metric"] = labels.get("__name__", "")
 
-            records.append(series_df)
+        records.append(chunk_df)
 
-        print("Imported.", flush=True)
+    print("Processed.", flush=True)
 
-    if records:
-        df = pd.concat(records, ignore_index=True)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-    else:
+    if not records:
         raise ValueError("No metrics data found for the specified time range.")
+
+    df = pd.concat(records, ignore_index=True)
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
 
     end_time = time.time()
     print(
