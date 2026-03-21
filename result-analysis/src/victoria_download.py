@@ -31,7 +31,6 @@ ALL_METRICS = [
 ]
 
 
-# JSON format type
 class Labels(TypedDict):
     __name__: str
     host: str
@@ -65,14 +64,14 @@ def download_metrics(
     resp = requests.get(
         f"{VICTORIA_METRICS_URL}/api/v1/export",
         params=params,
-        stream=True,
     )
     resp.raise_for_status()
+    raw_content = resp.content
     print("Downloaded.\nProcessing data... ", end="", flush=True)
 
     records = []
 
-    for line in resp.iter_lines():
+    for line in raw_content.split(b"\n"):
         if not line:
             continue
 
