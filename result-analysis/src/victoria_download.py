@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timezone
 from typing import TypedDict
 
-import pandas as pd
+import polars as pl
 
 VICTORIA_METRICS_URL = "http://localhost:8428"
 
@@ -46,10 +46,10 @@ class MetricData(TypedDict):
 
 def download_metrics(
     start: datetime, end: datetime, metrics: list[str] = ALL_METRICS
-) -> pd.DataFrame:
+) -> pl.DataFrame:
     """
     Download raw metrics from VictoriaMetrics between start and end.
-    Returns a pandas DataFrame containing all metrics data.
+    Returns a DataFrame containing all metrics data.
     """
     start_time = time.time()
 
@@ -85,11 +85,13 @@ def download_metrics(
 
         labels = metric_data.get("metric", {})
 
-        chunk_df = pd.DataFrame({"timestamp": timestamps, "value": values})
-
-        chunk_df["host"] = labels.get("host", "")
-        chunk_df["congestion"] = labels.get("congestion", "")
-        chunk_df["metric"] = labels.get("__name__", "")
+        chunk_df = pl.DataFrame(
+            {"timestamp": timestamps, "value": values}
+        ).with_columns(
+            pl.lit(labels.get("host", "")).alias("host"),
+            pl.lit(labels.get("congestion", "")).alias("congestion"),
+            pl.lit(labels.get("__name__", "")).alias("metric"),
+        )
 
         records.append(chunk_df)
 
@@ -98,8 +100,8 @@ def download_metrics(
     if not records:
         raise ValueError("No metrics data found for the specified time range.")
 
-    df = pd.concat(records, ignore_index=True)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+    df = pl.concat(records)
+    df = df.with_columns(pl.from_epoch("timestamp", time_unit="ms"))
 
     end_time = time.time()
     print(
