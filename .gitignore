@@ -4,3 +4,4 @@ docker-testbed/dist
 target/
 NOTES.md
 results.csv
+__pycache__/
