@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TypedDict
 
 import polars as pl
+
 from .victoria_download import download_metrics
 
 

@@ -1,10 +1,11 @@
+import matplotlib.pyplot as plt
+
 from src.experiments_download import (
     load_experiments_from_csv,
     experiments_download,
 )
-from src.visualization import print_experiment_results, plot_experiment
+from src.visualization import plot_experiment
 
-import matplotlib.pyplot as plt
 
 EXPERIMENT_RESULTS_CSV = "./test_results.csv"
 
