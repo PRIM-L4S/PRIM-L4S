@@ -28,12 +28,8 @@ def load_experiments_from_csv(file_path: str) -> list[Experiment]:
     for row in df.iter_rows(named=True):
         experiment: Experiment = {
             "scenario": row["Scenario"],
-            "start_time": datetime.fromisoformat(row["Launch time"]).astimezone(
-                timezone.utc
-            ),
-            "end_time": datetime.fromisoformat(row["End time"]).astimezone(
-                timezone.utc
-            ),
+            "start_time": datetime.fromtimestamp(row["Launch time"]),
+            "end_time": datetime.fromtimestamp(row["End time"]),
             "description": row["Description"],
         }
 
@@ -62,13 +58,3 @@ def experiments_download(experiments: list[Experiment]) -> list[ExperimentWithRe
         results.append(result)
 
     return results
-
-
-def print_experiment_results(experiments: list[ExperimentWithResults]):
-    for experiment in experiments:
-        print(f"{experiment['scenario']}")
-        print(f"    • Description: {experiment['description']}")
-        print(f"    • Start Time: {experiment['start_time']}")
-        print(f"    • End Time: {experiment['end_time']}")
-        print("     • Results:", experiment["results"].head(), "...")
-        print()
