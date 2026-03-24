@@ -12,7 +12,48 @@ use serde_json::Value;
 use std::fs::File;
 use std::io::BufReader;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[derive(Debug, thiserror::Error)]
+enum RunnerError {
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("Serialization error: {0}")]
+    SerializationError(#[from] serde_json::Error),
+    #[error("CSV error: {0}")]
+    CsvError(#[from] csv::Error),
+    #[error("Command \"{0}\" failed to execute: {1}")]
+    ExecutionError(String, String),
+}
+
+fn run_scenario(scenario: &str, time: u64) -> Result<(), RunnerError> {
+    //using make up SCENARIO=scenario
+    let output = Command::new("make")
+        .current_dir("../../docker-testbed")
+        .args(["up", &format!("SCENARIO={}", scenario)])
+        .output()?;
+    if !output.status.success() {
+        Err(RunnerError::ExecutionError(
+            "make up".into(),
+            String::from_utf8_lossy(&output.stderr).to_string(),
+        ))?
+    }
+
+    thread::sleep(time::Duration::from_secs(time));
+
+    let output = Command::new("make")
+        .current_dir("../../docker-testbed")
+        .args(["down"])
+        .output()?;
+    if !output.status.success() {
+        Err(RunnerError::ExecutionError(
+            "make down".into(),
+            String::from_utf8_lossy(&output.stderr).to_string(),
+        ))?
+    }
+
+    Ok(())
+}
+
+fn main() -> Result<(), RunnerError> {
     //opening results.csv for writing results
     let path = Path::new("results.csv");
     let file_exists = path.exists();
@@ -25,63 +66,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut wtr = WriterBuilder::new().from_writer(file);
 
     if !file_exists {
-        wtr.write_record(["Scenario", "Description", "Launch time"])?;
+        wtr.write_record(["Scenario", "Launch time", "End time", "Description"])?;
     }
 
     //running all scenarii
-    let scenarii: Vec<String> = env::args().skip(1).collect();
-
-    for scenario in scenarii.iter() {
+    for scenario in env::args().skip(1) {
         println!("Running scenario {}...", scenario);
 
-        if let Err(e) = (|| -> Result<(), Box<dyn std::error::Error>> {
-            let file = File::open(format!("../../docker-testbed/scenarii/{}.json", scenario))?;
-            let reader = BufReader::new(file);
-            let json: Value = serde_json::from_reader(reader)?;
-
-            let desc = json["description"].as_str().unwrap_or("").to_string();
-
-            // Measure launch time
-            let start_time = Local::now();
-
-            //using make up SCENARIO=scenario
-            let output = Command::new("make")
-                .current_dir("../../docker-testbed")
-                .args(["up", &format!("SCENARIO={}", scenario)])
-                .output()?;
-            if !output.status.success() {
-                eprintln!(
-                    "Error running scenario {}: {}",
-                    scenario,
-                    String::from_utf8_lossy(&output.stderr)
-                );
-            }
-
-            wtr.write_record(&[
-                scenario.to_string(),
-                desc,
-                format!("{}", start_time.format("%d/%m/%Y %H:%M")),
-            ])?;
-
-            thread::sleep(time::Duration::from_secs(120));
-
-            let output = Command::new("make")
-                .current_dir("../../docker-testbed")
-                .args(["down"])
-                .output()?;
-            if !output.status.success() {
-                eprintln!(
-                    "Error stopping scenario {}: {}",
-                    scenario,
-                    String::from_utf8_lossy(&output.stderr)
-                );
-            }
-
-            wtr.flush()?;
-            Ok(())
-        })() {
-            eprintln!("Error with scenario {}: {}", scenario, e);
+        let file = File::open(format!("../../docker-testbed/scenarii/{}.json", scenario))?;
+        let reader = BufReader::new(file);
+        if !reader.get_ref().metadata()?.is_file() {
+            Err(RunnerError::IoError(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Scenario file not found: {}", scenario),
+            )))?
         }
+
+        let json: Value = serde_json::from_reader(reader)?;
+
+        let desc = json["description"].as_str().unwrap_or("").to_string();
+
+        // Measure launch time
+        let start_time = Local::now();
+
+        run_scenario(&scenario, 120)?;
+
+        let end_time = Local::now();
+
+        wtr.write_record(&[
+            scenario,
+            format!("{}", start_time.format("%d/%m/%Y %H:%M")),
+            format!("{}", end_time.format("%d/%m/%Y %H:%M")),
+            desc,
+        ])?;
+
+        thread::sleep(time::Duration::from_secs(5));
     }
+
+    wtr.flush()?;
     Ok(())
 }
