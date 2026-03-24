@@ -44,18 +44,19 @@ class MetricData(TypedDict):
 
 
 def download_metrics(
-    start: datetime, end: datetime, metrics: list[str] = ALL_METRICS
+    start_time: datetime, end_time: datetime, metrics: list[str] = ALL_METRICS
 ) -> pl.DataFrame:
     """
-    Download raw metrics from VictoriaMetrics between start and end.
+    Download raw metrics from VictoriaMetrics between start_time and end_time.
+
     Returns a DataFrame containing all metrics data.
     """
-    start_time = time.time()
+    perf_start_time = time.time()
 
     # Send a single request for all metrics
     params = [
-        ("start", start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
-        ("end", end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+        ("start", start_time.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+        ("end", end_time.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
     ]
     for metric in metrics:
         params.append(("match[]", f'{{__name__="{metric}"}}'))
@@ -102,9 +103,9 @@ def download_metrics(
     df = pl.concat(records)
     df = df.with_columns(pl.from_epoch("timestamp", time_unit="ms"))
 
-    end_time = time.time()
+    perf_end_time = time.time()
     print(
-        f"Finished downloading and processing metrics in {end_time - start_time:.2f} seconds."
+        f"Finished downloading and processing metrics in {perf_end_time - perf_start_time:.2f} seconds."
     )
 
     return df

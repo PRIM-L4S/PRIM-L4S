@@ -1,18 +1,16 @@
-from src.victoria_download import download_metrics
+from src.experiments_download import (
+    load_experiments_from_csv,
+    experiments_download,
+    print_experiment_results,
+)
 
-from datetime import datetime, timedelta
+EXPERIMENT_RESULTS_CSV = "./results.csv"
 
 
 def main():
-    end = datetime(2026, 3, 21, 16, 9, 0)
+    results = experiments_download(load_experiments_from_csv(EXPERIMENT_RESULTS_CSV))
 
-    df = download_metrics(
-        start=end - timedelta(hours=1),
-        end=end,
-        metrics=["ss_snd_cwnd", "ss_snd_ssthresh", "ss_bytes_sent"],
-    )
-
-    print(df)
+    print_experiment_results(results)
 
 
 if __name__ == "__main__":
