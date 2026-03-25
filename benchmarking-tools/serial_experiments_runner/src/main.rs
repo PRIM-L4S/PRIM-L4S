@@ -104,6 +104,8 @@ fn main() -> Result<(), RunnerError> {
             desc,
         ])?;
 
+        wtr.flush()?;
+
         thread::sleep(time::Duration::from_secs(5));
     }
 
