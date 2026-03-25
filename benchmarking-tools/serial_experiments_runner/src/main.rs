@@ -65,11 +65,13 @@ fn main() -> Result<(), RunnerError> {
     //opening results.csv for writing results
     let path = Path::new("results.csv");
 
+    let file_exists = path.exists();
+
     let file = OpenOptions::new().create(true).append(true).open(path)?;
 
     let mut wtr = WriterBuilder::new().from_writer(file);
 
-    if !path.exists() {
+    if !file_exists {
         wtr.write_record(["Scenario", "Launch time", "End time", "Description"])?;
     }
 
