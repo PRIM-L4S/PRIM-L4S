@@ -80,12 +80,6 @@ fn main() -> Result<(), RunnerError> {
 
         let file = File::open(format!("../../docker-testbed/scenarii/{}.json", scenario))?;
         let reader = BufReader::new(file);
-        if !reader.get_ref().metadata()?.is_file() {
-            Err(RunnerError::IoError(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                format!("Scenario file not found: {}", scenario),
-            )))?
-        }
 
         let json: Value = serde_json::from_reader(reader)?;
 
