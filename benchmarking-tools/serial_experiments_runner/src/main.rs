@@ -41,7 +41,7 @@ fn run_scenario(scenario: &str, time: u64) -> Result<(), RunnerError> {
 
     let output = Command::new("make")
         .current_dir("../../docker-testbed")
-        .args(["down"])
+        .args(["down", "--remove-orphans"])
         .output()?;
     if !output.status.success() {
         Err(RunnerError::ExecutionError(
@@ -95,8 +95,8 @@ fn main() -> Result<(), RunnerError> {
 
         wtr.write_record(&[
             scenario,
-            format!("{}", start_time.format("%d/%m/%Y %H:%M")),
-            format!("{}", end_time.format("%d/%m/%Y %H:%M")),
+            format!("{}", start_time.to_rfc3339()),
+            format!("{}", end_time.to_rfc3339()),
             desc,
         ])?;
 
