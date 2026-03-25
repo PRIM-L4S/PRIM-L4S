@@ -9,27 +9,6 @@ import polars as pl
 
 VICTORIA_METRICS_URL = "http://localhost:8428"
 
-ALL_METRICS = [
-    "ss_snd_cwnd",
-    "ss_snd_ssthresh",
-    "ss_bytes_sent",
-    "ss_bytes_retrans",
-    "ss_bytes_acked",
-    "ss_delivery_rate",
-    "ss_rtt",
-    "ss_rttvar",
-    # "ss_number_of_samples",
-    "iperf_bytes",
-    "iperf_bits_per_second",
-    "iperf_retransmits",
-    "iperf_snd_cwnd",
-    "iperf_snd_wnd",
-    "iperf_rtt",
-    "iperf_rttvar",
-    "iperf_pmtu",
-    "hfe_number_of_benchmarks",
-]
-
 
 class Labels(TypedDict):
     __name__: str
@@ -44,7 +23,9 @@ class MetricData(TypedDict):
 
 
 def download_metrics(
-    start_time: datetime, end_time: datetime, metrics: list[str] = ALL_METRICS
+    start_time: datetime,
+    end_time: datetime,
+    metrics: list[str],
 ) -> pl.DataFrame:
     """
     Download raw metrics from VictoriaMetrics between start_time and end_time.

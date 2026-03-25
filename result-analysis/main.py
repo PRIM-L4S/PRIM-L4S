@@ -4,17 +4,38 @@ from src.experiments_download import (
     load_experiments_from_csv,
     experiments_download,
 )
-from src.visualization import plot_experiment
+from src.two_cc_comparison import (
+    filter_two_cc_relevant_experiments,
+    plot_two_cc_comparison,
+)
 
 
-EXPERIMENT_RESULTS_CSV = "./test_results.csv"
+EXPERIMENT_RESULTS_CSV = "./results.csv"
+
+METRIC = "ss_rtt"
+CC1 = "prague"
+CC2 = "cubic"
+OTHER_PARAMS = "1000mbit+10ms+1ms"
 
 
 def main():
-    results = experiments_download(load_experiments_from_csv(EXPERIMENT_RESULTS_CSV))
+    experiments = load_experiments_from_csv(EXPERIMENT_RESULTS_CSV)
 
-    for result in results:
-        plot_experiment(result, "ss_rtt")
+    relevant_experiments = filter_two_cc_relevant_experiments(
+        experiments, cc1=CC1, cc2=CC2, other_params=OTHER_PARAMS
+    )
+
+    relevant_experiments_with_results = experiments_download(
+        relevant_experiments, [METRIC]
+    )
+
+    plot_two_cc_comparison(
+        relevant_experiments_with_results,
+        metric=METRIC,
+        cc1=CC1,
+        cc2=CC2,
+        other_params=OTHER_PARAMS,
+    )
 
     plt.show()
 

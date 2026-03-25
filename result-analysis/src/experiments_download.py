@@ -1,20 +1,31 @@
 from datetime import datetime
-from typing import TypedDict
+from typing import Sequence
 
 import polars as pl
 
 from .victoria_download import download_metrics
+from .data_types import Experiment, ExperimentWithResults
 
-
-class Experiment(TypedDict):
-    scenario: str
-    start_time: datetime
-    end_time: datetime
-    description: str
-
-
-class ExperimentWithResults(Experiment):
-    results: pl.DataFrame
+ALL_METRICS = [
+    "ss_snd_cwnd",
+    "ss_snd_ssthresh",
+    "ss_bytes_sent",
+    "ss_bytes_retrans",
+    "ss_bytes_acked",
+    "ss_delivery_rate",
+    "ss_rtt",
+    "ss_rttvar",
+    # "ss_number_of_samples",
+    "iperf_bytes",
+    "iperf_bits_per_second",
+    "iperf_retransmits",
+    "iperf_snd_cwnd",
+    "iperf_snd_wnd",
+    "iperf_rtt",
+    "iperf_rttvar",
+    "iperf_pmtu",
+    "hfe_number_of_benchmarks",
+]
 
 
 def load_experiments_from_csv(file_path: str) -> list[Experiment]:
@@ -39,14 +50,16 @@ def load_experiments_from_csv(file_path: str) -> list[Experiment]:
     return experiments
 
 
-def experiments_download(experiments: list[Experiment]) -> list[ExperimentWithResults]:
+def experiments_download(
+    experiments: Sequence[Experiment], metrics: list[str] = ALL_METRICS
+) -> list[ExperimentWithResults]:
     """
     Downloads the metrics for each experiment and returns a list of experiments with their results.
     """
 
     results: list[ExperimentWithResults] = []
     for experiment in experiments:
-        df = download_metrics(experiment["start_time"], experiment["end_time"])
+        df = download_metrics(experiment["start_time"], experiment["end_time"], metrics)
 
         result: ExperimentWithResults = {
             "scenario": experiment["scenario"],
