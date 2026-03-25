@@ -12,6 +12,8 @@ use serde_json::Value;
 use std::fs::File;
 use std::io::BufReader;
 
+const RUN_TIME: Duration = Duration::from_secs(120);
+
 #[derive(Debug, thiserror::Error)]
 enum RunnerError {
     #[error("IO error: {0}")]
@@ -24,7 +26,7 @@ enum RunnerError {
     ExecutionError(String, String),
 }
 
-fn run_scenario(scenario: &str, time: u64) -> Result<(), RunnerError> {
+fn run_scenario(scenario: &str, wait_time: Duration) -> Result<(), RunnerError> {
     //using make up SCENARIO=scenario
     let output = Command::new("make")
         .current_dir("../../docker-testbed")
@@ -37,11 +39,17 @@ fn run_scenario(scenario: &str, time: u64) -> Result<(), RunnerError> {
         ))?
     }
 
-    thread::sleep(time::Duration::from_secs(time));
+    thread::sleep(wait_time);
 
+    clean_up()?;
+
+    Ok(())
+}
+
+fn clean_up() -> Result<(), RunnerError> {
     let output = Command::new("make")
         .current_dir("../../docker-testbed")
-        .args(["down", "--remove-orphans"])
+        .args(["down"])
         .output()?;
     if !output.status.success() {
         Err(RunnerError::ExecutionError(
@@ -49,25 +57,22 @@ fn run_scenario(scenario: &str, time: u64) -> Result<(), RunnerError> {
             String::from_utf8_lossy(&output.stderr).to_string(),
         ))?
     }
-
     Ok(())
 }
 
 fn main() -> Result<(), RunnerError> {
     //opening results.csv for writing results
     let path = Path::new("results.csv");
-    let file_exists = path.exists();
 
-    let file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("results.csv")?;
+    let file = OpenOptions::new().create(true).append(true).open(path)?;
 
     let mut wtr = WriterBuilder::new().from_writer(file);
 
-    if !file_exists {
+    if !path.exists() {
         wtr.write_record(["Scenario", "Launch time", "End time", "Description"])?;
     }
+
+    clean_up()?;
 
     //running all scenarii
     for scenario in env::args().skip(1) {
@@ -84,12 +89,16 @@ fn main() -> Result<(), RunnerError> {
 
         let json: Value = serde_json::from_reader(reader)?;
 
-        let desc = json["description"].as_str().unwrap_or("").to_string();
+        let desc = json
+            .get("description")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
 
         // Measure launch time
         let start_time = Local::now();
 
-        run_scenario(&scenario, 120)?;
+        run_scenario(&scenario, RUN_TIME)?;
 
         let end_time = Local::now();
 
