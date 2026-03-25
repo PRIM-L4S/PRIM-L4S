@@ -29,8 +29,8 @@ def load_experiments_from_csv(file_path: str) -> list[Experiment]:
     for row in df.iter_rows(named=True):
         experiment: Experiment = {
             "scenario": row["Scenario"],
-            "start_time": datetime.fromtimestamp(row["Launch time"]),
-            "end_time": datetime.fromtimestamp(row["End time"]),
+            "start_time": datetime.fromisoformat(row["Launch time"]),
+            "end_time": datetime.fromisoformat(row["End time"]),
             "description": row["Description"],
         }
 
