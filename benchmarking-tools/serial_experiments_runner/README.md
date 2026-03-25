@@ -12,6 +12,40 @@ Runs `scenario1.json` and `scenario2.json`. The files need to be in `docker-test
 
 You can then check the results out on VictoriaMetrics using the timestamps in `results.csv`.
 
+## Persistent terminal during experiments
+
+Because the experiments run for a long time, you may want to make sure that your terminal session persists even if you get disconnected.
+
+- Create a new tmux session:
+
+```sh
+tmux new -s serial_experiments
+```
+
+- Detach from the tmux session (leave it running in the background):
+
+```
+Ctrl + b, then d
+```
+
+- List current tmux sessions:
+
+```sh
+tmux ls
+```
+
+- Reattach to the tmux session:
+
+```sh
+tmux attach -t serial_experiments
+```
+
+- Kill the tmux session when you're done. Launch `exit` in the session or run:
+
+```sh
+tmux kill-session -t serial_experiments
+```
+
 ## Usage example
 
 ```sh
