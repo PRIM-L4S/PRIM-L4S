@@ -1,0 +1,12 @@
+[package]
+name = "serial_experiments_runner"
+version = "0.1.0"
+edition = "2024"
+authors = ["Thomas Sauvage", "Emre Ucar", "Timothée Fisher"]
+description = "A tool meant to run several experiment scenarii from the docker-testbed and store results in a file"
+
+[dependencies]
+chrono = "0.4.44"
+csv = "1.4.0"
+serde_json = "1.0.149"
+thiserror = "2.0.18"
