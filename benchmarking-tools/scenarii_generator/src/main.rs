@@ -53,6 +53,8 @@ fn parse_weights(input: &str) -> Result<Vec<u32>, String> {
 }
 
 fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
+
     let cli = Cli::parse();
     // println!("{:#?}", cli);
 
