@@ -16,7 +16,7 @@ df = df.with_columns(
 )
 
 df = df.with_columns(
-    (pl.col("End time") - pl.col("Launch time")).dt.total_seconds().alias("Duration_s")
+    (pl.col("End time") - pl.col("Launch time")).dt.total_seconds().alias("Duration")
 )
 
 df.write_csv("results.with_durations.csv")

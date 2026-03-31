@@ -1,9 +1,12 @@
-*.pcap
 .venv/
+__pycache__/
 docker-testbed/dist
 target/
+
+.~lock*
+*@*+*+*.json
+
 NOTES.md
-__pycache__/
+*.pcap
 results.csv
 results.*.csv
-.~lock*
