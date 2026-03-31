@@ -1,7 +1,7 @@
-use std::env;
 use std::process::Command;
+use std::thread;
 use std::time::Duration;
-use std::{thread, time};
+use std::{env, io};
 
 use chrono::Local;
 
@@ -11,9 +11,12 @@ use std::path::Path;
 
 use serde_json::Value;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Write};
 
+const TIME_BETWEEN_SCENARIOS: Duration = Duration::from_secs(5);
 const RUN_TIME: Duration = Duration::from_secs(120);
+const MAX_UP_RETRIES: usize = 10;
+const UP_RETRY_WAIT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, thiserror::Error)]
 enum RunnerError {
@@ -27,24 +30,63 @@ enum RunnerError {
     ExecutionError(String, String),
 }
 
-fn run_scenario(scenario: &str, wait_time: Duration) -> Result<(), RunnerError> {
-    //using make up SCENARIO=scenario
-    let output = Command::new("make")
-        .current_dir("../../docker-testbed")
-        .args(["up", &format!("SCENARIO={}", scenario)])
-        .output()?;
-    if !output.status.success() {
-        Err(RunnerError::ExecutionError(
-            "make up".into(),
-            String::from_utf8_lossy(&output.stderr).to_string(),
-        ))?
+struct ScenarioExecution {
+    start_time: chrono::DateTime<Local>,
+    end_time: chrono::DateTime<Local>,
+}
+
+fn run_scenario(scenario: &str) -> Result<ScenarioExecution, RunnerError> {
+    print!("Scenario {}: Starting... ", scenario);
+    io::stdout().flush()?;
+
+    for attempt in 1..=MAX_UP_RETRIES {
+        let start_time = Local::now();
+
+        let output = Command::new("make")
+            .current_dir("../../docker-testbed")
+            .args(["up", &format!("SCENARIO={}", scenario)])
+            .output()?;
+
+        let end_time = Local::now();
+
+        if output.status.success() {
+            print!("Running... ");
+            io::stdout().flush()?;
+            thread::sleep(RUN_TIME);
+            clean_up()?;
+            println!("Finished and cleaned.");
+
+            return Ok(ScenarioExecution {
+                start_time,
+                end_time,
+            });
+        }
+
+        let combined_output = format!(
+            "stdout:\n{}\n\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+
+        if attempt < MAX_UP_RETRIES {
+            eprintln!(
+                "\n\nScenario {}: make up failed (attempt {}/{}). Retrying in {}s...\nError details:\n{}",
+                scenario,
+                attempt,
+                MAX_UP_RETRIES,
+                UP_RETRY_WAIT.as_secs(),
+                combined_output
+            );
+
+            clean_up()?;
+            thread::sleep(UP_RETRY_WAIT);
+        }
     }
 
-    thread::sleep(wait_time);
-
-    clean_up()?;
-
-    Ok(())
+    Err(RunnerError::ExecutionError(
+        "make up".into(),
+        "Exhausted retry attempts for make up".into(),
+    ))
 }
 
 fn clean_up() -> Result<(), RunnerError> {
@@ -75,12 +117,15 @@ fn main() -> Result<(), RunnerError> {
         wtr.write_record(["Scenario", "Launch time", "End time", "Description"])?;
     }
 
+    print!("Cleaning up before starting... ");
+    io::stdout().flush()?;
+
     clean_up()?;
+
+    println!("Done.");
 
     //running all scenarii
     for scenario in env::args().skip(1) {
-        println!("Running scenario {}...", scenario);
-
         let file = File::open(format!("../../docker-testbed/scenarii/{}.json", scenario))?;
         let reader = BufReader::new(file);
 
@@ -92,23 +137,18 @@ fn main() -> Result<(), RunnerError> {
             .unwrap_or("")
             .to_string();
 
-        // Measure launch time
-        let start_time = Local::now();
-
-        run_scenario(&scenario, RUN_TIME)?;
-
-        let end_time = Local::now();
+        let scenario_execution = run_scenario(&scenario)?;
 
         wtr.write_record(&[
             scenario,
-            format!("{}", start_time.to_rfc3339()),
-            format!("{}", end_time.to_rfc3339()),
+            format!("{}", scenario_execution.start_time.to_rfc3339()),
+            format!("{}", scenario_execution.end_time.to_rfc3339()),
             desc,
         ])?;
 
         wtr.flush()?;
 
-        thread::sleep(time::Duration::from_secs(5));
+        thread::sleep(TIME_BETWEEN_SCENARIOS);
     }
 
     wtr.flush()?;

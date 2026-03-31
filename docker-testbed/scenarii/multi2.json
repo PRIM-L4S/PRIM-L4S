@@ -1,0 +1,39 @@
+{
+  "description": "1 client of each type: reno, cubic, and bbr, sharing a common 5 mbit link. No iperf limit.",
+  "configs": {
+    "reno": {
+      "docker": {
+        "sysctls": ["net.ipv4.tcp_congestion_control=reno"]
+      },
+      "iperf": {
+        "bitrate": "0"
+      }
+    },
+    "cubic": {
+      "docker": {
+        "sysctls": ["net.ipv4.tcp_congestion_control=cubic"]
+      },
+      "iperf": {
+        "bitrate": "0"
+      }
+    },
+    "bbr": {
+      "docker": {
+        "sysctls": ["net.ipv4.tcp_congestion_control=bbr"]
+      },
+      "iperf": {
+        "bitrate": "0"
+      }
+    }
+  },
+  "instances": {
+    "reno1": "reno",
+    "cubic1": "cubic",
+    "bbr1": "bbr"
+  },
+  "router": {
+    "max_bandwidth": "5mbit",
+    "delay_config": "10ms 1ms"
+  },
+  "template_generated_info": "This file is generated from a template. Do not edit directly. Instead, edit the template with a `.j2` extension."
+}
