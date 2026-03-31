@@ -82,7 +82,7 @@ def filter_two_cc_relevant_experiments(
 
         if nbr_cc1 + nbr_cc2 != 10:
             print(
-                f"[ ⚠️ ] The total number of containers is not 10 in scenario '{experiment['scenario']}' (got {nbr_cc1 + nbr_cc2}). Skipped."
+                f"[ ⚠️  ] The total number of containers is not 10 in scenario '{experiment['scenario']}' (got {nbr_cc1 + nbr_cc2}). Skipped."
             )
             continue
 

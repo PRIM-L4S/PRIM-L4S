@@ -5,4 +5,5 @@ target/
 NOTES.md
 __pycache__/
 results.csv
-test_results.csv
+results.*.csv
+.~lock*

@@ -79,7 +79,9 @@ def download_metrics(
     print("Processed.", flush=True)
 
     if not records:
-        raise ValueError("No metrics data found for the specified time range.")
+        raise ValueError(
+            f"No metrics data found for metrics {metrics} between {start_time.isoformat()} and {end_time.isoformat()}."
+        )
 
     df = pl.concat(records)
     df = df.with_columns(pl.from_epoch("timestamp", time_unit="ms"))

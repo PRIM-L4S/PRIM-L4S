@@ -47,14 +47,14 @@ fn run_scenario(scenario: &str) -> Result<ScenarioExecution, RunnerError> {
             .args(["up", &format!("SCENARIO={}", scenario)])
             .output()?;
 
-        let end_time = Local::now();
-
         if output.status.success() {
             print!("Running... ");
             io::stdout().flush()?;
             thread::sleep(RUN_TIME);
             clean_up()?;
             println!("Finished and cleaned.");
+
+            let end_time = Local::now();
 
             return Ok(ScenarioExecution {
                 start_time,
