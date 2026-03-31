@@ -14,6 +14,8 @@ use std::fs::File;
 use std::io::BufReader;
 
 const RUN_TIME: Duration = Duration::from_secs(120);
+const MAX_UP_RETRIES: usize = 10;
+const UP_RETRY_WAIT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, thiserror::Error)]
 enum RunnerError {
@@ -27,24 +29,45 @@ enum RunnerError {
     ExecutionError(String, String),
 }
 
-fn run_scenario(scenario: &str, wait_time: Duration) -> Result<(), RunnerError> {
-    //using make up SCENARIO=scenario
-    let output = Command::new("make")
-        .current_dir("../../docker-testbed")
-        .args(["up", &format!("SCENARIO={}", scenario)])
-        .output()?;
-    if !output.status.success() {
-        Err(RunnerError::ExecutionError(
-            "make up".into(),
-            String::from_utf8_lossy(&output.stderr).to_string(),
-        ))?
+fn run_scenario(scenario: &str) -> Result<(), RunnerError> {
+    for attempt in 1..=MAX_UP_RETRIES {
+        //using make up SCENARIO=scenario
+        let output = Command::new("make")
+            .current_dir("../../docker-testbed")
+            .args(["up", &format!("SCENARIO={}", scenario)])
+            .output()?;
+
+        if output.status.success() {
+            thread::sleep(RUN_TIME);
+            clean_up()?;
+            return Ok(());
+        }
+
+        let combined_output = format!(
+            "stdout:\n{}\n\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+
+        if attempt < MAX_UP_RETRIES {
+            eprintln!(
+                "Scenario {}: make up failed (attempt {}/{}). Retrying in {}s...\nError details:\n{}",
+                scenario,
+                attempt,
+                MAX_UP_RETRIES,
+                UP_RETRY_WAIT.as_secs(),
+                combined_output
+            );
+
+            clean_up()?;
+            thread::sleep(UP_RETRY_WAIT);
+        }
     }
 
-    thread::sleep(wait_time);
-
-    clean_up()?;
-
-    Ok(())
+    Err(RunnerError::ExecutionError(
+        "make up".into(),
+        "Exhausted retry attempts for make up".into(),
+    ))
 }
 
 fn clean_up() -> Result<(), RunnerError> {
@@ -95,7 +118,7 @@ fn main() -> Result<(), RunnerError> {
         // Measure launch time
         let start_time = Local::now();
 
-        run_scenario(&scenario, RUN_TIME)?;
+        run_scenario(&scenario)?;
 
         let end_time = Local::now();
 
