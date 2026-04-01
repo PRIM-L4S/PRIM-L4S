@@ -9,6 +9,8 @@ from .data_types import (
     ExperimentWithResultsAndNbrCCs,
 )
 
+from src.experiments_download import experiments_download
+
 
 def _get_two_cc_scenario_pattern(
     cc1: str,
@@ -16,9 +18,12 @@ def _get_two_cc_scenario_pattern(
     other_params: str,
 ) -> re.Pattern:
     return re.compile(
-        rf"^(?P<left_n>\d+)(?P<left_cc>{re.escape(cc1)}|{re.escape(cc2)})\+"
-        rf"(?P<right_n>\d+)(?P<right_cc>{re.escape(cc1)}|{re.escape(cc2)})@"
-        rf"{re.escape(other_params)}$"
+        rf"^(?:"
+        rf"(?P<single_n>\d+)(?P<single_cc>{re.escape(cc1)}|{re.escape(cc2)})"
+        rf"|"
+        rf"(?P<left_n>\d+)(?P<left_cc>{re.escape(cc1)}|{re.escape(cc2)})\+"
+        rf"(?P<right_n>\d+)(?P<right_cc>{re.escape(cc1)}|{re.escape(cc2)})"
+        rf")@{re.escape(other_params)}$"
     )
 
 
@@ -28,6 +33,13 @@ def _match_pattern(
     match = pattern.match(scenario)
     if not match:
         return None
+
+    single_cc = match.group("single_cc")
+    if single_cc:
+        single_n = int(match.group("single_n"))
+        if single_cc == cc1:
+            return single_n, 0
+        return 0, single_n
 
     left_cc = match.group("left_cc")
     right_cc = match.group("right_cc")
@@ -197,3 +209,49 @@ def plot_two_cc_comparison(
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+
+
+def download_and_save_two_cc_comparison(
+    experiments: list[Experiment],
+    metric: str,
+    cc1: str,
+    cc2: str,
+    other_params: str,
+):
+    """
+    Completes the experiments with results by adding the number of cc1 and cc2 containers to each experiment.
+
+    Saves two plots: one with the full y-axis range, and one zoomed in around the cc1 values.
+    """
+
+    relevant_experiments = filter_two_cc_relevant_experiments(
+        experiments, cc1=cc1, cc2=cc2, other_params=other_params
+    )
+
+    relevant_experiments_with_results = experiments_download(
+        relevant_experiments, [metric]
+    )
+
+    share_cc1, medians_cc1, medians_cc2 = _two_cc_comparison(
+        relevant_experiments_with_results, metric, cc1, cc2, other_params
+    )
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(share_cc1, medians_cc1, label=cc1, marker="o")
+    plt.plot(share_cc1, medians_cc2, label=cc2, marker="o")
+    plt.title(f"Comparison of {cc1} and {cc2} for {metric}")
+    plt.xlabel("Share of containers using " + cc1)
+    plt.ylabel(f"Median {metric}")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}.png")
+
+    min_median_cc1 = np.nanmin(medians_cc1)
+    max_median_cc1 = np.nanmax(medians_cc1)
+    padding = (max_median_cc1 - min_median_cc1) * 0.05
+
+    plt.ylim(min_median_cc1 - padding, max_median_cc1 + padding)
+
+    plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}_zoomed.png")

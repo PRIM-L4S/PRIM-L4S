@@ -10,3 +10,5 @@ NOTES.md
 *.pcap
 results.csv
 results.*.csv
+result-analysis/figures/*
+!.gitkeep
