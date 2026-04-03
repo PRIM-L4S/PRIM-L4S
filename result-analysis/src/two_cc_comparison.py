@@ -213,7 +213,7 @@ def plot_two_cc_comparison(
 
 def download_and_save_two_cc_comparison(
     experiments: list[Experiment],
-    metric: str,
+    metrics: list[str],
     cc1: str,
     cc2: str,
     other_params: str,
@@ -229,29 +229,30 @@ def download_and_save_two_cc_comparison(
     )
 
     relevant_experiments_with_results = experiments_download(
-        relevant_experiments, [metric]
+        relevant_experiments, metrics
     )
 
-    share_cc1, medians_cc1, medians_cc2 = _two_cc_comparison(
-        relevant_experiments_with_results, metric, cc1, cc2, other_params
-    )
+    for metric in metrics:
+        share_cc1, medians_cc1, medians_cc2 = _two_cc_comparison(
+            relevant_experiments_with_results, metric, cc1, cc2, other_params
+        )
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(share_cc1, medians_cc1, label=cc1, marker="o")
-    plt.plot(share_cc1, medians_cc2, label=cc2, marker="o")
-    plt.title(f"Comparison of {cc1} and {cc2} for {metric}")
-    plt.xlabel("Share of containers using " + cc1)
-    plt.ylabel(f"Median {metric}")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
+        plt.figure(figsize=(10, 6))
+        plt.plot(share_cc1, medians_cc1, label=cc1, marker="o")
+        plt.plot(share_cc1, medians_cc2, label=cc2, marker="o")
+        plt.title(f"Comparison of {cc1} and {cc2} for {metric}")
+        plt.xlabel("Share of containers using " + cc1)
+        plt.ylabel(f"Median {metric}")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
 
-    plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}.png")
+        plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}.png")
 
-    min_median_cc1 = np.nanmin(medians_cc1)
-    max_median_cc1 = np.nanmax(medians_cc1)
-    padding = (max_median_cc1 - min_median_cc1) * 0.05
+        min_median_cc1 = np.nanmin(medians_cc1)
+        max_median_cc1 = np.nanmax(medians_cc1)
+        padding = (max_median_cc1 - min_median_cc1) * 0.05
 
-    plt.ylim(min_median_cc1 - padding, max_median_cc1 + padding)
+        plt.ylim(min_median_cc1 - padding, max_median_cc1 + padding)
 
-    plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}_zoomed.png")
+        plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}_zoomed.png")
