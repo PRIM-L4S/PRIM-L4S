@@ -2,6 +2,7 @@ import re
 import numpy as np
 import polars as pl
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 
 from .data_types import (
     Experiment,
@@ -10,6 +11,14 @@ from .data_types import (
 )
 
 from src.experiments_download import experiments_download
+
+from src.utils import format_y_axis_as_scientific_notation
+
+COLORS = {
+    "prague": "tab:blue",
+    "cubic": "tab:orange",
+    "bbr": "tab:green",
+}
 
 
 def _get_two_cc_scenario_pattern(
@@ -193,7 +202,7 @@ def plot_two_cc_comparison(
     other_params: str,
 ):
     """
-    Plots the comparison of two congestion control algorithms (cc1 and cc2) for a given metric.
+    Plots the Comparing two congestion control algorithms (cc1 and cc2) for a given metric.
     """
 
     share_cc1, medians_cc1, medians_cc2 = _two_cc_comparison(
@@ -201,11 +210,21 @@ def plot_two_cc_comparison(
     )
 
     plt.figure(figsize=(10, 6))
-    plt.plot(share_cc1, medians_cc1, label=cc1, marker="o")
-    plt.plot(share_cc1, medians_cc2, label=cc2, marker="o")
-    plt.title(f"Comparison of {cc1} and {cc2} for {metric}")
-    plt.xlabel("Share of containers using " + cc1)
+    plt.plot(
+        share_cc1, medians_cc1, label=cc1, marker="o", color=COLORS.get(cc1, "tab:blue")
+    )
+    plt.plot(
+        share_cc1,
+        medians_cc2,
+        label=cc2,
+        marker="o",
+        color=COLORS.get(cc2, "tab:orange"),
+    )
+    plt.title(f"Comparing {cc1} and {cc2} for {metric}")
+    plt.xlabel("Share of clients using " + cc1)
+    plt.gca().xaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0))
     plt.ylabel(f"Median {metric}")
+    format_y_axis_as_scientific_notation()
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
@@ -238,16 +257,30 @@ def download_and_save_two_cc_comparison(
         )
 
         plt.figure(figsize=(10, 6))
-        plt.plot(share_cc1, medians_cc1, label=cc1, marker="o")
-        plt.plot(share_cc1, medians_cc2, label=cc2, marker="o")
-        plt.title(f"Comparison of {cc1} and {cc2} for {metric}")
-        plt.xlabel("Share of containers using " + cc1)
+        plt.plot(
+            share_cc1,
+            medians_cc1,
+            label=cc1,
+            marker="o",
+            color=COLORS.get(cc1, "tab:blue"),
+        )
+        plt.plot(
+            share_cc1,
+            medians_cc2,
+            label=cc2,
+            marker="o",
+            color=COLORS.get(cc2, "tab:orange"),
+        )
+        plt.title(f"Comparing {cc1} and {cc2} for {metric}")
+        plt.xlabel("Share of clients using " + cc1)
+        plt.gca().xaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0))
         plt.ylabel(f"Median {metric}")
+        format_y_axis_as_scientific_notation()
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
 
-        plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}.png")
+        plt.savefig(f"figures/2cc {cc1}+{cc2} {metric} {other_params}.png")
 
         min_median_cc1 = np.nanmin(medians_cc1)
         max_median_cc1 = np.nanmax(medians_cc1)
@@ -255,4 +288,4 @@ def download_and_save_two_cc_comparison(
 
         plt.ylim(min_median_cc1 - padding, max_median_cc1 + padding)
 
-        plt.savefig(f"figures/2cc_{cc1}+{cc2}_{metric}_{other_params}_zoomed.png")
+        plt.savefig(f"figures/2cc {cc1}+{cc2} {metric} {other_params} (zoomed).png")
