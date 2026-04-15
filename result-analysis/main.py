@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from src.experiments_download import load_experiments_from_csv
 
@@ -18,20 +18,23 @@ METRICS = [
     "ss_rttvar",
 ]
 CC1 = "prague"
-OTHER_PARAMS = "1000mbit+10ms+1ms"
+CC2 = ["cubic", "bbr"]
+OTHER_PARAMS = [
+    "1000mbit+10ms+1ms",
+    "100mbit+10ms+1ms",
+    "50mbit+10ms+1ms",
+    "10mbit+10ms+1ms",
+]
 
 
 def main():
     experiments = load_experiments_from_csv(EXPERIMENT_RESULTS_CSV)
 
-    # download_and_save_two_cc_comparison(
-    #     experiments, ["ss_rtt"], CC1, "cubic", OTHER_PARAMS
-    # )
-    # exit(0)
-
-    for cc2 in ["cubic", "bbr"]:
+    for cc2, other_params in tqdm(
+        [(cc2, other_params) for cc2 in CC2 for other_params in OTHER_PARAMS]
+    ):
         download_and_save_two_cc_comparison(
-            experiments, METRICS, CC1, cc2, OTHER_PARAMS
+            experiments, METRICS, CC1, cc2, other_params
         )
 
 

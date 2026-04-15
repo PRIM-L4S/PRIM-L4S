@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Sequence
 
 import polars as pl
+from tqdm import tqdm
 
 from .victoria_download import download_metrics
 from .data_types import Experiment, ExperimentWithResults
@@ -58,7 +59,7 @@ def experiments_download(
     """
 
     results: list[ExperimentWithResults] = []
-    for experiment in experiments:
+    for experiment in tqdm(experiments, leave=False):
         df = download_metrics(experiment["start_time"], experiment["end_time"], metrics)
 
         result: ExperimentWithResults = {

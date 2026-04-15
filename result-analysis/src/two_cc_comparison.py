@@ -5,6 +5,7 @@ import numpy as np
 import polars as pl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from tqdm import tqdm
 
 from .data_types import (
     Experiment,
@@ -21,6 +22,9 @@ COLORS = {
     "cubic": "tab:orange",
     "bbr": "tab:green",
 }
+
+REQUIRE_ZOOM_THRESHOLD = 5.0
+ZOOM_PADDING_RATIO = 0.05
 
 
 def _get_two_cc_scenario_pattern(
@@ -104,7 +108,7 @@ def filter_two_cc_relevant_experiments(
         #     )
 
         if nbr_cc1 + nbr_cc2 != 10:
-            print(
+            tqdm.write(
                 f"[ ⚠️  ] The total number of containers is not 10 in scenario '{experiment['scenario']}' (got {nbr_cc1 + nbr_cc2}). Skipped."
             )
             continue
@@ -253,7 +257,7 @@ def download_and_save_two_cc_comparison(
         relevant_experiments, metrics
     )
 
-    for metric in metrics:
+    for metric in tqdm(metrics, leave=False):
         share_cc1, medians_cc1, medians_cc2 = _two_cc_comparison(
             relevant_experiments_with_results, metric, cc1, cc2, other_params
         )
@@ -291,10 +295,31 @@ def download_and_save_two_cc_comparison(
 
         min_median_cc1 = np.nanmin(medians_cc1)
         max_median_cc1 = np.nanmax(medians_cc1)
-        padding = (max_median_cc1 - min_median_cc1) * 0.05
+        range_cc1 = max_median_cc1 - min_median_cc1
 
-        plt.ylim(min_median_cc1 - padding, max_median_cc1 + padding)
+        min_median_cc2 = np.nanmin(medians_cc2)
+        max_median_cc2 = np.nanmax(medians_cc2)
+        range_cc2 = max_median_cc2 - min_median_cc2
+        padding_cc2 = range_cc2 * 0.05
 
-        plt.savefig(
-            f"figures/Two CC comparison/{other_params}/{cc1}+{cc2} {metric} {other_params} (zoomed).png"
-        )
+        if REQUIRE_ZOOM_THRESHOLD * range_cc1 < range_cc2:
+            plt.ylim(
+                min_median_cc1 - range_cc1 * ZOOM_PADDING_RATIO,
+                max_median_cc1 + range_cc1 * ZOOM_PADDING_RATIO,
+            )
+
+            plt.savefig(
+                f"figures/Two CC comparison/{other_params}/{cc1}+{cc2} {metric} (zoomed).png"
+            )
+
+        if REQUIRE_ZOOM_THRESHOLD * range_cc2 < range_cc1:
+            plt.ylim(
+                min_median_cc2 - range_cc2 * ZOOM_PADDING_RATIO,
+                max_median_cc2 + range_cc2 * ZOOM_PADDING_RATIO,
+            )
+
+            plt.savefig(
+                f"figures/Two CC comparison/{other_params}/{cc1}+{cc2} {metric} (zoomed).png"
+            )
+
+        plt.close()

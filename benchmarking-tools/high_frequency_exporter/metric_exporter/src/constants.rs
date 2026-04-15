@@ -7,7 +7,7 @@ pub const INTERVAL_SENDING: Duration = Duration::from_secs(10);
 pub const INTERVAL_GATHERING: Duration = Duration::from_millis(1);
 
 /// Interval between the **start** of each iperf3 benchmarks
-pub const INTERVAL_IPERF: Duration = Duration::from_secs(15);
+pub const INTERVAL_IPERF: Duration = Duration::from_secs(40);
 
 /// Duration of each iperf3 benchmark. Must be less than INTERVAL_IPERF.
-pub const DURATION_IPERF: Duration = Duration::from_secs(10);
+pub const DURATION_IPERF: Duration = Duration::from_secs(35);

@@ -14,7 +14,7 @@ use std::fs::File;
 use std::io::{BufReader, Write};
 
 const TIME_BETWEEN_SCENARIOS: Duration = Duration::from_secs(5);
-const RUN_TIME: Duration = Duration::from_secs(120);
+const RUN_TIME: Duration = Duration::from_mins(4);
 const MAX_UP_RETRIES: usize = 10;
 const UP_RETRY_WAIT: Duration = Duration::from_secs(10);
 
