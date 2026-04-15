@@ -32,8 +32,6 @@ def download_metrics(
 
     Returns a DataFrame containing all metrics data.
     """
-    perf_start_time = time.time()
-
     # Send a single request for all metrics
     params = [
         ("start", start_time.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
@@ -42,14 +40,12 @@ def download_metrics(
     for metric in metrics:
         params.append(("match[]", f'{{__name__="{metric}"}}'))
 
-    print("Downloading metrics... ", end="", flush=True)
     resp = requests.get(
         f"{VICTORIA_METRICS_URL}/api/v1/export",
         params=params,
     )
     resp.raise_for_status()
     raw_content = resp.content
-    print("Downloaded.\nProcessing data... ", end="", flush=True)
 
     records = []
 
@@ -76,8 +72,6 @@ def download_metrics(
 
         records.append(chunk_df)
 
-    print("Processed.", flush=True)
-
     if not records:
         raise ValueError(
             f"No metrics data found for metrics {metrics} between {start_time.isoformat()} and {end_time.isoformat()}."
@@ -85,10 +79,5 @@ def download_metrics(
 
     df = pl.concat(records)
     df = df.with_columns(pl.from_epoch("timestamp", time_unit="ms"))
-
-    perf_end_time = time.time()
-    print(
-        f"Finished downloading and processing metrics in {perf_end_time - perf_start_time:.2f} seconds."
-    )
 
     return df
