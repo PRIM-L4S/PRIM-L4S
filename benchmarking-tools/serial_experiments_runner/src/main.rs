@@ -1,7 +1,8 @@
+mod constants;
+mod progress;
+
+use std::env;
 use std::process::Command;
-use std::thread;
-use std::time::Duration;
-use std::{env, io};
 
 use chrono::Local;
 
@@ -11,12 +12,12 @@ use std::path::Path;
 
 use serde_json::Value;
 use std::fs::File;
-use std::io::{BufReader, Write};
+use std::io::BufReader;
 
-const TIME_BETWEEN_SCENARIOS: Duration = Duration::from_secs(5);
-const RUN_TIME: Duration = Duration::from_mins(4);
-const MAX_UP_RETRIES: usize = 10;
-const UP_RETRY_WAIT: Duration = Duration::from_secs(10);
+use progress::ProgressUi;
+
+use crate::constants::{MAX_UP_RETRIES, RUN_TIME, TIME_BETWEEN_SCENARIOS, UP_RETRY_WAIT};
+use crate::progress::ProgressBarStyle;
 
 #[derive(Debug, thiserror::Error)]
 enum RunnerError {
@@ -35,11 +36,16 @@ struct ScenarioExecution {
     end_time: chrono::DateTime<Local>,
 }
 
-fn run_scenario(scenario: &str) -> Result<ScenarioExecution, RunnerError> {
-    print!("Scenario {}: Starting... ", scenario);
-    io::stdout().flush()?;
-
+fn run_scenario(
+    scenario: &str,
+    progress_ui: &ProgressUi,
+) -> Result<ScenarioExecution, RunnerError> {
     for attempt in 1..=MAX_UP_RETRIES {
+        progress_ui.spinner(format!(
+            "Launching scenario {} (attempt {}/{})",
+            scenario, attempt, MAX_UP_RETRIES
+        ));
+
         let start_time = Local::now();
 
         let output = Command::new("make")
@@ -48,11 +54,10 @@ fn run_scenario(scenario: &str) -> Result<ScenarioExecution, RunnerError> {
             .output()?;
 
         if output.status.success() {
-            print!("Running... ");
-            io::stdout().flush()?;
-            thread::sleep(RUN_TIME);
+            progress_ui.sleep_with_progress(RUN_TIME, "Running", ProgressBarStyle::Running);
+
+            progress_ui.spinner(format!("Cleaning up scenario {}", scenario));
             clean_up()?;
-            println!("Finished and cleaned.");
 
             let end_time = Local::now();
 
@@ -69,17 +74,31 @@ fn run_scenario(scenario: &str) -> Result<ScenarioExecution, RunnerError> {
         );
 
         if attempt < MAX_UP_RETRIES {
-            eprintln!(
-                "\n\nScenario {}: make up failed (attempt {}/{}). Retrying in {}s...\nError details:\n{}",
+            progress_ui.current_task().abandon_with_message(format!(
+                "Scenario {} failed to launch on attempt {}/{}",
+                scenario, attempt, MAX_UP_RETRIES
+            ));
+
+            progress_ui.overall().println(format!(
+                "Scenario {}: make up failed (attempt {}/{}). Retrying in {}s...\nError details:\n{}",
                 scenario,
                 attempt,
                 MAX_UP_RETRIES,
                 UP_RETRY_WAIT.as_secs(),
                 combined_output
-            );
+            ));
 
             clean_up()?;
-            thread::sleep(UP_RETRY_WAIT);
+            progress_ui.sleep_with_progress(
+                UP_RETRY_WAIT,
+                format!("Waiting before retrying scenario {}", scenario),
+                ProgressBarStyle::Waiting,
+            );
+        } else {
+            progress_ui.current_task().abandon_with_message(format!(
+                "Scenario {} failed to launch after {} attempts",
+                scenario, MAX_UP_RETRIES
+            ));
         }
     }
 
@@ -111,21 +130,24 @@ fn main() -> Result<(), RunnerError> {
 
     let file = OpenOptions::new().create(true).append(true).open(path)?;
 
-    let mut wtr = WriterBuilder::new().from_writer(file);
+    let mut result_file = WriterBuilder::new().from_writer(file);
 
     if !file_exists {
-        wtr.write_record(["Scenario", "Launch time", "End time", "Description"])?;
+        result_file.write_record(["Scenario", "Launch time", "End time", "Description"])?;
     }
 
-    print!("Cleaning up before starting... ");
-    io::stdout().flush()?;
+    let scenarios = env::args().skip(1).collect::<Vec<String>>();
+    let progress_ui = ProgressUi::new(scenarios.len() as u64, "Starting...");
 
+    progress_ui.spinner("Cleaning up before starting");
     clean_up()?;
 
-    println!("Done.");
-
     //running all scenarii
-    for scenario in env::args().skip(1) {
+    for scenario in scenarios {
+        progress_ui
+            .overall()
+            .set_message(format!("Scenario {}", scenario));
+
         let file = File::open(format!("../../docker-testbed/scenarii/{}.json", scenario))?;
         let reader = BufReader::new(file);
 
@@ -137,20 +159,30 @@ fn main() -> Result<(), RunnerError> {
             .unwrap_or("")
             .to_string();
 
-        let scenario_execution = run_scenario(&scenario)?;
+        let scenario_execution = run_scenario(&scenario, &progress_ui)?;
 
-        wtr.write_record(&[
-            scenario,
-            format!("{}", scenario_execution.start_time.to_rfc3339()),
-            format!("{}", scenario_execution.end_time.to_rfc3339()),
+        result_file.write_record(&[
+            scenario.clone(),
+            scenario_execution.start_time.to_rfc3339(),
+            scenario_execution.end_time.to_rfc3339(),
             desc,
         ])?;
 
-        wtr.flush()?;
+        result_file.flush()?;
 
-        thread::sleep(TIME_BETWEEN_SCENARIOS);
+        progress_ui.overall().inc(1);
+
+        if progress_ui.overall().position() < progress_ui.overall().length().unwrap_or(0) {
+            progress_ui.sleep_with_progress(
+                TIME_BETWEEN_SCENARIOS,
+                "Cooldown before next scenario",
+                ProgressBarStyle::Waiting,
+            );
+        }
     }
 
-    wtr.flush()?;
+    result_file.flush()?;
+
+    progress_ui.finish("All scenarios completed");
     Ok(())
 }
