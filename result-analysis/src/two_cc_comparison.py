@@ -1,4 +1,6 @@
+import os
 import re
+
 import numpy as np
 import polars as pl
 import matplotlib.pyplot as plt
@@ -280,7 +282,12 @@ def download_and_save_two_cc_comparison(
         plt.grid(True)
         plt.tight_layout()
 
-        plt.savefig(f"figures/2cc {cc1}+{cc2} {metric} {other_params}.png")
+        # Create the directory if it doesn't exist
+        os.makedirs(f"figures/Two CC comparison/{other_params}", exist_ok=True)
+
+        plt.savefig(
+            f"figures/Two CC comparison/{other_params}/{cc1}+{cc2} {metric}.png"
+        )
 
         min_median_cc1 = np.nanmin(medians_cc1)
         max_median_cc1 = np.nanmax(medians_cc1)
@@ -288,4 +295,6 @@ def download_and_save_two_cc_comparison(
 
         plt.ylim(min_median_cc1 - padding, max_median_cc1 + padding)
 
-        plt.savefig(f"figures/2cc {cc1}+{cc2} {metric} {other_params} (zoomed).png")
+        plt.savefig(
+            f"figures/Two CC comparison/{other_params}/{cc1}+{cc2} {metric} {other_params} (zoomed).png"
+        )
