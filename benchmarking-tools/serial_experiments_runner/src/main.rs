@@ -1,6 +1,8 @@
+mod constants;
+mod progress;
+
 use std::env;
 use std::process::Command;
-use std::time::Duration;
 
 use chrono::Local;
 
@@ -12,15 +14,10 @@ use serde_json::Value;
 use std::fs::File;
 use std::io::BufReader;
 
-mod progress;
 use progress::ProgressUi;
 
+use crate::constants::{MAX_UP_RETRIES, RUN_TIME, TIME_BETWEEN_SCENARIOS, UP_RETRY_WAIT};
 use crate::progress::ProgressBarStyle;
-
-const TIME_BETWEEN_SCENARIOS: Duration = Duration::from_secs(5);
-const RUN_TIME: Duration = Duration::from_mins(4);
-const MAX_UP_RETRIES: usize = 10;
-const UP_RETRY_WAIT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, thiserror::Error)]
 enum RunnerError {

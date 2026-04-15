@@ -3,6 +3,8 @@ use std::time::Duration;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
+use crate::constants::{RUN_TIME, TIME_BETWEEN_SCENARIOS};
+
 pub struct ProgressUi {
     overall_bar: ProgressBar,
     current_task_bar: ProgressBar,
@@ -22,6 +24,7 @@ impl ProgressUi {
 
         let overall = multi.add(ProgressBar::new(total));
         overall.set_style(get_progress_style(ProgressBarStyle::Overall));
+        overall.set_position(0);
         overall.set_message(initial_message.into());
 
         let current_task_bar = multi.insert_after(&overall, ProgressBar::new(1));
@@ -77,19 +80,43 @@ impl ProgressUi {
 
 fn get_progress_style(style: ProgressBarStyle) -> ProgressStyle {
     match style {
-        ProgressBarStyle::Running =>  ProgressStyle::with_template(" [{wide_bar:.green/blue}] {msg} {pos}/{len}s ETA {eta_precise}")
+        ProgressBarStyle::Running => ProgressStyle::with_template(
+            " [{wide_bar:.green/blue}] {msg} {pos}/{len}s ETA {eta_precise}",
+        )
         .unwrap()
         .progress_chars("=>-"),
-        ProgressBarStyle::Waiting =>   ProgressStyle::with_template(" [{wide_bar:.yellow/blue}] {msg} {pos}/{len}s elapsed")
+        ProgressBarStyle::Waiting => {
+            ProgressStyle::with_template(" [{wide_bar:.yellow/blue}] {msg} {pos}/{len}s elapsed")
+                .unwrap()
+                .progress_chars("=>-")
+        }
+        ProgressBarStyle::Overall => ProgressStyle::with_template(
+            " [{wide_bar:.cyan/blue}] {msg} {pos}/{len} elapsed {elapsed_precise} ETA {eta_custom}",
+        )
         .unwrap()
-        .progress_chars("=>-"),
-        ProgressBarStyle::Overall =>     ProgressStyle::with_template(
-        " [{wide_bar:.cyan/blue}] {msg} {pos}/{len} elapsed {elapsed_precise} ETA {eta_precise}",
-    )
+        .with_key("eta_custom", compute_eta_custom)
+        .progress_chars("#>-"),
+        ProgressBarStyle::Spinner => ProgressStyle::with_template("{spinner:.green} {msg}")
             .unwrap()
-            .progress_chars("#>-"),
-            ProgressBarStyle::Spinner =>     ProgressStyle::with_template("{spinner:.green} {msg}")
-        .unwrap()
-        .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
     }
+}
+
+fn format_duration_precise(duration: Duration) -> String {
+    let total_secs = duration.as_secs();
+    let hours = total_secs / 3600;
+    let minutes = (total_secs % 3600) / 60;
+    let seconds = total_secs % 60;
+
+    format!("{hours:02}:{minutes:02}:{seconds:02}")
+}
+
+fn compute_eta_custom(state: &indicatif::ProgressState, writer: &mut dyn std::fmt::Write) {
+    let remaining_elements = state.len().unwrap_or(0).saturating_sub(state.pos());
+    // Assuming 10s to clean up and start the scenario
+    let remaining_time = remaining_elements * (10 + (RUN_TIME + TIME_BETWEEN_SCENARIOS).as_secs());
+
+    let _ = writer.write_str(&format_duration_precise(Duration::from_secs(
+        remaining_time,
+    )));
 }
