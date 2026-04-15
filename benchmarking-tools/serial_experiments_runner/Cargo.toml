@@ -8,5 +8,6 @@ description = "A tool meant to run several experiment scenarii from the docker-t
 [dependencies]
 chrono = "0.4.44"
 csv = "1.4.0"
+indicatif = "0.18.4"
 serde_json = "1.0.149"
 thiserror = "2.0.18"
