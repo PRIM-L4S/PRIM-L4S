@@ -16,16 +16,16 @@ make install
 
 - (Optionally) create your own template file in the [scenarii](scenarii/) directory
 
-- List available templates
+- List available scenarii:
 
 ```sh
 make list
 ```
 
-- Start the desired template
+- Start the desired scenario with:
 
 ```sh
-make up SCENARIO=<template name>
+make up SCENARIO=<scenario name>
 ```
 
 - Observe the logs:
@@ -34,21 +34,27 @@ make up SCENARIO=<template name>
 make logs
 ```
 
-- Stop docker containers
+- Stop the docker containers
 
 ```sh
 make down
 ```
 
-## Access prometheus web UI
+- Just start the metrics storage and web UI, without starting any scenario:
+
+```sh
+make up SCENARIO=only-victoria
+```
+
+## Access the metrics web UI
 
 - Open SSH tunnel with forwarding:
 
 ```sh
-ssh -L 9000:localhost:9000 l4s
+ssh -L 8428:localhost:8428 l4s
 ```
 
-- Open http://localhost:9000 in your browser.
+- Open http://localhost:8428/vmui in your browser.
 
 ## Creating bufferbloat
 
