@@ -3,8 +3,10 @@ use metric_data_store::{MetricDataFormat, ToImportFormat};
 #[derive(ToImportFormat, Debug)]
 pub struct MetricDataStore {
     // === TCP_INFO metrics ===
-    /// Instantaneous congestion window size
+    /// Instantaneous congestion window size (unit: MSS)
     pub ss_snd_cwnd: MetricDataFormat,
+    /// Instantaneous maximum segment size
+    pub ss_snd_mss: MetricDataFormat,
     /// Slow start threshold
     pub ss_snd_ssthresh: MetricDataFormat,
 
