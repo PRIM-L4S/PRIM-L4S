@@ -24,6 +24,10 @@ struct Cli {
     /// Destination folder (defaults to cwd)
     #[arg(long)]
     output_folder: Option<String>,
+
+    /// Total number of clients
+    #[arg(short, default_value_t = 10)]
+    n: u32,
 }
 
 fn parse_client_group(s: &str) -> Result<Vec<String>, String> {
@@ -59,7 +63,7 @@ fn main() -> eyre::Result<()> {
     // println!("{:#?}", cli);
 
     generate::generate(
-        10,
+        cli.n,
         cli.bandwidths,
         cli.client,
         cli.weights,
