@@ -4,9 +4,11 @@ use rtnetlink::{
     Handle,
     packet_route::{
         link::LinkMessage,
-        tc::{TcAttribute, TcMessage, TcStats2},
+        tc::{TcAttribute, TcMessage, TcStats2, TcXstats},
     },
 };
+
+use crate::dualpi2::DualPi2XStats;
 
 #[derive(Debug)]
 pub struct QdiscInterfaceStatistics {
@@ -25,9 +27,21 @@ pub struct QdiscInterfaceStatistics {
     pub requeues: Option<u32>,
     /// number of enqueues over the limit
     pub overlimits: Option<u32>,
+    /// current PI2 probability
+    pub prob: Option<u32>,
+    /// current delay in C queue
+    pub delay_c: Option<u32>,
+    /// current delay in L queue
+    pub delay_l: Option<u32>,
+    /// number of packets enqueued in C queue
+    pub packets_in_c: Option<u32>,
+    /// number of packets enqueued in L queue
+    pub packets_in_l: Option<u32>,
+    /// maximum queue size reached
+    pub maxq: Option<u32>,
+    /// packets marked with ecn
+    pub ecn_mark: Option<u32>,
 }
-
-const TC_H_ROOT: u32 = 0xFFFF_FFFF;
 
 pub struct QdiscStatistics {
     handle: Handle,
@@ -44,28 +58,40 @@ impl QdiscStatistics {
     fn process_qdisc_message(&self, message: TcMessage) -> Option<QdiscInterfaceStatistics> {
         let (header, attributes) = message.into_parts();
 
-        // node_exporter typically reports *root* qdiscs; keep this if you want the same effect.
-        if header.parent != TC_H_ROOT.into() {
-            return None;
-        }
-
+        let mut kind = None;
         let mut basic = None;
         let mut queue = None;
+        let mut dualpi2 = None;
 
         for attribute in attributes {
-            if let TcAttribute::Stats2(stats) = attribute {
-                for stat in stats {
-                    match stat {
-                        TcStats2::Basic(raw) => {
-                            basic = Some(raw);
+            match attribute {
+                TcAttribute::Kind(name) => {
+                    kind = Some(name);
+                }
+                TcAttribute::Stats2(stats) => {
+                    for stat in stats {
+                        match stat {
+                            TcStats2::Basic(raw) => {
+                                basic = Some(raw);
+                            }
+                            TcStats2::Queue(raw) => {
+                                queue = Some(raw);
+                            }
+                            _ => {}
                         }
-                        TcStats2::Queue(raw) => {
-                            queue = Some(raw);
-                        }
-                        _ => {}
                     }
                 }
+                TcAttribute::Xstats(TcXstats::Other(raw)) => {
+                    if let Some(dualpi2_stats) = DualPi2XStats::from_bytes(&raw) {
+                        dualpi2 = Some(dualpi2_stats);
+                    }
+                }
+                _ => (),
             }
+        }
+
+        if kind != Some("dualpi2".into()) {
+            return None;
         }
 
         Some(QdiscInterfaceStatistics {
@@ -77,11 +103,18 @@ impl QdiscStatistics {
             drops: queue.and_then(|queue| Some(queue.drops)),
             requeues: queue.and_then(|queue| Some(queue.requeues)),
             overlimits: queue.and_then(|queue| Some(queue.overlimits)),
+            prob: dualpi2.and_then(|dualpi2| Some(dualpi2.prob)),
+            delay_c: dualpi2.and_then(|dualpi2| Some(dualpi2.delay_c)),
+            delay_l: dualpi2.and_then(|dualpi2| Some(dualpi2.delay_l)),
+            packets_in_c: dualpi2.and_then(|dualpi2| Some(dualpi2.packets_in_c)),
+            packets_in_l: dualpi2.and_then(|dualpi2| Some(dualpi2.packets_in_l)),
+            maxq: dualpi2.and_then(|dualpi2| Some(dualpi2.maxq)),
+            ecn_mark: dualpi2.and_then(|dualpi2| Some(dualpi2.ecn_mark)),
         })
     }
 
     pub async fn poll(&self) -> Result<Vec<QdiscInterfaceStatistics>> {
-        let qreq = self.handle.qdisc().get().index(0); // FIXME: index = 0 ok ?
+        let qreq = self.handle.qdisc().get();
 
         let stream = qreq.execute();
 
