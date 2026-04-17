@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-use crate::constants::{RUN_TIME, TIME_BETWEEN_SCENARIOS};
+use crate::constants::{RUN_TIME, SCENARIO_SETUP_TIME, TIME_BETWEEN_SCENARIOS};
 
 pub struct ProgressUi {
     overall_bar: ProgressBar,
@@ -113,10 +113,8 @@ fn format_duration_precise(duration: Duration) -> String {
 
 fn compute_eta_custom(state: &indicatif::ProgressState, writer: &mut dyn std::fmt::Write) {
     let remaining_elements = state.len().unwrap_or(0).saturating_sub(state.pos());
-    // Assuming 10s to clean up and start the scenario
-    let remaining_time = remaining_elements * (10 + (RUN_TIME + TIME_BETWEEN_SCENARIOS).as_secs());
+    let remaining_time =
+        (remaining_elements as u32) * (SCENARIO_SETUP_TIME + RUN_TIME + TIME_BETWEEN_SCENARIOS);
 
-    let _ = writer.write_str(&format_duration_precise(Duration::from_secs(
-        remaining_time,
-    )));
+    let _ = writer.write_str(&format_duration_precise(remaining_time));
 }
