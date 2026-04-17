@@ -11,6 +11,8 @@ cargo run -- --help
 ## Usage example
 
 ```sh
+cargo run -- --bandwidths 10,50,100,1000 --client cubic,bbr,prague --weights 1 -n 1 --output-folder scenarii/one-client
+
 cargo run -- --bandwidths 10,50,100,1000 --client cubic,bbr,prague --weights 1 --output-folder scenarii/simple
 
 cargo run -- --bandwidths 10,50,100,1000 --client cubic,bbr --client prague --weights 90-10,80-20,70-30,60-40,50-50,40-60,30-70,20-80,10-90 --output-folder scenarii/multi2

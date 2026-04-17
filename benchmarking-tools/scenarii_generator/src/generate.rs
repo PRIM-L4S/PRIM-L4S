@@ -81,6 +81,12 @@ pub fn generate(
         .collect::<Vec<Vec<(String, u32)>>>();
 
     for partial_scenario in &partial_scenarii {
+        if partial_scenario.iter().map(|&(_, n)| n).sum::<u32>() != total_client_count {
+            eprintln!(
+                "Warning: total number of clients does not match target {total_client_count}: {partial_scenario:?}"
+            )
+        }
+
         for bandwidth in &bandwidths {
             let max_bandwidth = bandwidth.to_string() + "mbit";
             let delay_config = "10ms 1ms".into();

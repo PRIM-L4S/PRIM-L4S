@@ -37,6 +37,7 @@ pub async fn loop_gathering(
                     .as_millis();
 
                 storage.ss_snd_cwnd.push(now, stats.tcpi_snd_cwnd as u64); // TODO: snd or rcv?
+                storage.ss_snd_mss.push(now, stats.tcpi_snd_mss as u64);
                 storage
                     .ss_snd_ssthresh
                     .push(now, stats.tcpi_snd_ssthresh as u64);
