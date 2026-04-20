@@ -1,4 +1,5 @@
 import os
+import textwrap
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -8,9 +9,6 @@ from tqdm import tqdm
 from src.data_types import Experiment, TwoCCGraphConfig
 from src.experiments_download import experiments_download
 from src.two_cc_comparison.two_cc_comparison import (
-    COLORS,
-    REQUIRE_ZOOM_THRESHOLD,
-    ZOOM_PADDING_RATIO,
     filter_two_cc_relevant_experiments,
     two_cc_comparison,
 )
@@ -21,6 +19,10 @@ from src.two_cc_comparison.utils import (
     graph_foldername,
 )
 from src.utils import format_y_axis_as_scientific_notation
+
+REQUIRE_ZOOM_THRESHOLD = 5.0
+ZOOM_PADDING_RATIO = 0.05
+TITLE_WRAP_THRESHOLD = 100
 
 
 def download_and_save_two_cc_comparison(
@@ -68,10 +70,14 @@ def download_and_save_two_cc_comparison(
                     curve_values[j],
                     label=curve_config["label"],
                     marker="o",
-                    color=COLORS.get(curve_config["label"], "tab:blue"),
+                    color=curve_config["color"],
                 )
 
-            plt.title(graph_config["title"])
+            plt.title(
+                "\n".join(
+                    textwrap.wrap(graph_config["title"], width=TITLE_WRAP_THRESHOLD)
+                )
+            )
             plt.xlabel("Share of clients using " + cc1)
             plt.gca().xaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0))
             plt.ylabel(graph_config["yaxis_label"])
@@ -100,6 +106,15 @@ def download_and_save_two_cc_comparison(
                     plt.ylim(
                         min_curves[i] - curve_range * ZOOM_PADDING_RATIO,
                         max_curves[i] + curve_range * ZOOM_PADDING_RATIO,
+                    )
+                    zoomed_title = (
+                        graph_config["title"]
+                        + f" (zoomed on {graph_config['curves'][i]['label']})"
+                    )
+                    plt.title(
+                        "\n".join(
+                            textwrap.wrap(zoomed_title, width=TITLE_WRAP_THRESHOLD)
+                        )
                     )
 
                     plt.savefig(

@@ -16,14 +16,6 @@ from src.data_types import (
 )
 
 
-COLORS = {
-    "prague": "tab:blue",
-    "cubic": "tab:orange",
-    "bbr": "tab:green",
-}
-
-REQUIRE_ZOOM_THRESHOLD = 5.0
-ZOOM_PADDING_RATIO = 0.05
 TOTAL_NBR_CONTAINERS = 10
 
 

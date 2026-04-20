@@ -1,3 +1,5 @@
+import textwrap
+
 from src.data_types import (
     ExperimentWithResults,
     ExperimentWithResultsAndNbrCCs,
