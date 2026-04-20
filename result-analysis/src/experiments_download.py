@@ -38,7 +38,15 @@ def load_experiments_from_csv(file_path: str) -> list[Experiment]:
     df = pl.read_csv(file_path)
     experiments: list[Experiment] = []
 
+    experiments_scenarios = set()
     for row in df.iter_rows(named=True):
+        if row["Scenario"] in experiments_scenarios:
+            raise ValueError(
+                f"At least one duplicate scenario found in results.csv: {row['Scenario']}"
+            )
+
+        experiments_scenarios.add(row["Scenario"])
+
         experiment: Experiment = {
             "scenario": row["Scenario"],
             "start_time": datetime.fromisoformat(row["Launch time"]),

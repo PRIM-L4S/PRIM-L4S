@@ -43,6 +43,7 @@ def download_metrics(
     resp = requests.get(
         f"{VICTORIA_METRICS_URL}/api/v1/export",
         params=params,
+        timeout=5,  # s
     )
     resp.raise_for_status()
     raw_content = resp.content
