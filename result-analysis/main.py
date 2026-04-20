@@ -53,7 +53,7 @@ def main():
                 graphs_to_generate.append(
                     {
                         "short_name": "qdisc_delay",
-                        "title": f"Comparing the delays of the router's queues when clients use {CC1[0]} and {CC2[0]} with parameters {OTHER_PARAMS[0]}",
+                        "title": f"Comparing the delays of the router's queues when clients use {cc1} and {cc2} with parameters {other_params}",
                         "yaxis_label": f"Median delay in the queue (in μs?)",
                         "cc1": cc1,
                         "cc2": cc2,
