@@ -1,10 +1,10 @@
-from tqdm import tqdm
-
 from src.experiments_download import load_experiments_from_csv
 
-from src.two_cc_comparison import (
-    download_and_save_two_cc_comparison,
+from src.two_cc_comparison.generate_configs import (
     generate_simple_clients_medians_graph_config,
+)
+from src.two_cc_comparison.download_and_save import (
+    download_and_save_two_cc_comparison,
 )
 
 
