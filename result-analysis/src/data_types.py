@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TypedDict
+from typing import Callable, TypedDict
 
 import polars as pl
 
@@ -22,3 +22,35 @@ class ExperimentWithNbrCCs(Experiment):
 
 class ExperimentWithResultsAndNbrCCs(ExperimentWithResults, ExperimentWithNbrCCs):
     pass
+
+
+class TwoCCCurveConfig(TypedDict):
+    """
+    Each curve in a graph is defined by a TwoCCCurveConfig, which specifies how to compute the value of the curve for an experiment.
+    """
+
+    label: str
+    color: str
+    compute: Callable[[ExperimentWithResultsAndNbrCCs], float]
+
+
+class TwoCCGraphConfig(TypedDict):
+    """
+    Each generated graph is defined by a TwoCCGraphConfig.
+    """
+
+    short_name: str
+    title: str
+    yaxis_label: str
+
+    cc1: str
+    cc2: str
+    other_params: str
+
+    required_metrics: list[str]
+    """ 
+    The metrics that are required to compute the value of the curve for an experiment.
+    This is used to download only the required metrics.
+    """
+
+    curves: list[TwoCCCurveConfig]
