@@ -114,6 +114,42 @@ cargo run \
   1prague+9cubic@50mbit+10ms+1ms \
   1prague+9cubic@100mbit+10ms+1ms \
   1prague+9cubic@1000mbit+10ms+1ms \
+  1bbr+9cubic@1000mbit+10ms+1ms \
+  1bbr+9cubic@100mbit+10ms+1ms \
+  1bbr+9cubic@10mbit+10ms+1ms \
+  1bbr+9cubic@50mbit+10ms+1ms \
+  1cubic+9bbr@1000mbit+10ms+1ms \
+  1cubic+9bbr@100mbit+10ms+1ms \
+  1cubic+9bbr@10mbit+10ms+1ms \
+  1cubic+9bbr@50mbit+10ms+1ms \
+  2bbr+8cubic@1000mbit+10ms+1ms \
+  2bbr+8cubic@100mbit+10ms+1ms \
+  2bbr+8cubic@10mbit+10ms+1ms \
+  2bbr+8cubic@50mbit+10ms+1ms \
+  2cubic+8bbr@1000mbit+10ms+1ms \
+  2cubic+8bbr@100mbit+10ms+1ms \
+  2cubic+8bbr@10mbit+10ms+1ms \
+  2cubic+8bbr@50mbit+10ms+1ms \
+  3bbr+7cubic@1000mbit+10ms+1ms \
+  3bbr+7cubic@100mbit+10ms+1ms \
+  3bbr+7cubic@10mbit+10ms+1ms \
+  3bbr+7cubic@50mbit+10ms+1ms \
+  3cubic+7bbr@1000mbit+10ms+1ms \
+  3cubic+7bbr@100mbit+10ms+1ms \
+  3cubic+7bbr@10mbit+10ms+1ms \
+  3cubic+7bbr@50mbit+10ms+1ms \
+  4bbr+6cubic@1000mbit+10ms+1ms \
+  4bbr+6cubic@100mbit+10ms+1ms \
+  4bbr+6cubic@10mbit+10ms+1ms \
+  4bbr+6cubic@50mbit+10ms+1ms \
+  4cubic+6bbr@1000mbit+10ms+1ms \
+  4cubic+6bbr@100mbit+10ms+1ms \
+  4cubic+6bbr@10mbit+10ms+1ms \
+  4cubic+6bbr@50mbit+10ms+1ms \
+  5bbr+5cubic@1000mbit+10ms+1ms \
+  5bbr+5cubic@100mbit+10ms+1ms \
+  5bbr+5cubic@10mbit+10ms+1ms \
+  5bbr+5cubic@50mbit+10ms+1ms \
   2bbr+3cubic+4prague@10mbit+10ms+1ms \
   2bbr+3cubic+4prague@50mbit+10ms+1ms \
   2bbr+3cubic+4prague@100mbit+10ms+1ms \
