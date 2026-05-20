@@ -37,3 +37,27 @@ def print_experiment_results(experiments: list[ExperimentWithResults]):
         print(f"    • End Time: {experiment['end_time']}")
         print(f"    • Results: {experiment['results'].head()}\n   ...")
         print()
+
+
+def plot_histogram(experiment: ExperimentWithResults, metric: str, cc: str):
+    """
+    Plots the histogram of a metric for an experiment.
+    """
+    df_metric = (
+        experiment["results"]
+        .filter(pl.col("metric") == metric)
+        .filter(pl.col("congestion") == cc)
+    )
+    median = df_metric.median()["value"][0]
+    std = df_metric.std()["value"][0]
+    print(f"Experiment '{experiment['scenario']}': median={median}, std={std}")
+
+    plt.figure(figsize=(10, 6))
+    plt.hist(df_metric["value"], bins=50)
+    plt.title(
+        f'Histogram of {cc} clients\' {metric} in scenario "{experiment["scenario"]}"'
+    )
+    plt.xlabel(metric)
+    plt.ylabel("Frequency")
+    plt.grid(True)
+    plt.tight_layout()

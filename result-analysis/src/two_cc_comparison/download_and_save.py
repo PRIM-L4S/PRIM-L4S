@@ -59,15 +59,17 @@ def download_and_save_two_cc_comparison(
             cc2 = graph_config["cc2"]
             other_params = graph_config["other_params"]
 
-            share_cc1, curve_values = two_cc_comparison(
+            share_cc1, curve_values, curve_errors = two_cc_comparison(
                 relevant_experiments_with_results, graph_config
             )
 
             plt.figure(figsize=(10, 6))
             for j, curve_config in enumerate(graph_config["curves"]):
-                plt.plot(
+                # yerr creates a vertical error bar of height yerr under and yerr above the point.
+                plt.errorbar(
                     share_cc1,
                     curve_values[j],
+                    yerr=curve_errors[j],
                     label=curve_config["label"],
                     marker="o",
                     color=curve_config["color"],

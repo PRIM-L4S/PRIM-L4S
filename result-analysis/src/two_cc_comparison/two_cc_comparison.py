@@ -15,7 +15,6 @@ from src.data_types import (
     TwoCCGraphConfig,
 )
 
-
 TOTAL_NBR_CONTAINERS = 10
 
 
@@ -65,7 +64,7 @@ def filter_two_cc_relevant_experiments(
 def two_cc_comparison(
     experiments: list[ExperimentWithResults],
     graph_config: TwoCCGraphConfig,
-) -> tuple[np.ndarray, list[np.ndarray]]:
+) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray]]:
     """
     Compares the results of two congestion control algorithms (cc1 and cc2) for a given metric and other parameters.
     """
@@ -84,16 +83,18 @@ def two_cc_comparison(
 
     share_cc1 = np.zeros(len(experiments_with_results_and_nbr_ccs))
     curve_values = []
+    curve_errors = []
     for i in range(len(graph_config["curves"])):
         curve_values.append(np.zeros(len(experiments_with_results_and_nbr_ccs)))
+        curve_errors.append(np.zeros(len(experiments_with_results_and_nbr_ccs)))
 
     for i, experiment in enumerate(experiments_with_results_and_nbr_ccs):
         for j, curve_config in enumerate(graph_config["curves"]):
             compute_curve_values = curve_config["compute"]
-            curve_values[j][i] = compute_curve_values(experiment)
+            curve_values[j][i], curve_errors[j][i] = compute_curve_values(experiment)
 
         share_cc1[i] = experiment["number_of_cc1"] / (
             experiment["number_of_cc1"] + experiment["number_of_cc2"]
         )
 
-    return share_cc1, curve_values
+    return share_cc1, curve_values, curve_errors

@@ -31,7 +31,11 @@ class TwoCCCurveConfig(TypedDict):
 
     label: str
     color: str
-    compute: Callable[[ExperimentWithResultsAndNbrCCs], float]
+
+    compute: Callable[[ExperimentWithResultsAndNbrCCs], tuple[float, float]]
+    """
+    A function that takes an experiment and returns the value of the curve for this experiment, as well as the error.
+    """
 
 
 class TwoCCGraphConfig(TypedDict):
