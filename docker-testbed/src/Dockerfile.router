@@ -28,7 +28,23 @@ RUN cargo build --release
 FROM debian:13 AS base-runner
 
 # Install iptables package for NAT and routing
-RUN apt-get update && apt-get install -y iproute2 ethtool lsof iptables iputils-ping ca-certificates
+RUN apt-get update && apt-get install -y ethtool lsof iptables iputils-ping ca-certificates
+
+# Build iproute2
+RUN apt-get update && apt-get install -y make git build-essential libdb-dev bison flex
+
+WORKDIR /tmp
+RUN git clone https://github.com/L4STeam/iproute2.git
+WORKDIR /tmp/iproute2
+
+# Debian 13's glibc already declares setns(2); keep the source build but
+# disable the compatibility shim that conflicts with that declaration.
+RUN sed -i 's/^#ifndef HAVE_SETNS$/#if !defined(HAVE_SETNS) \&\& !defined(__GLIBC__)/' include/namespace.h
+
+RUN ./configure
+RUN make
+RUN make install
+RUN rm -rf /tmp/iproute2
 
 # ==================== Runner stage ======================
 FROM base-runner AS runner
