@@ -5,13 +5,11 @@ NETIF1=$(ip -o addr show | awk '/172\.20\.2\.2/ {print $2}')
 
 # Activate Dual PI2 Dual Queue AQM on the router
 # see https://www.man7.org/linux/man-pages/man8/tc-dualpi2.8.html
-#
-# If you intend to use non-default parameters for dualpi2, make sure to use the patched iproute2
-# see https://github.com/l4STeam/linux?tab=readme-ov-file#compilation
-ethtool -K $NETIF0 tso off gso off gro off lro off # I'm not sure if this is needed on a router
+
+ethtool -K $NETIF0 tso off gso off gro off lro off
 tc qdisc add dev $NETIF0 root handle 1: dualpi2
 
-ethtool -K $NETIF1 tso off gso off gro off lro off # I'm not sure if this is needed on a router
+ethtool -K $NETIF1 tso off gso off gro off lro off
 tc qdisc add dev $NETIF1 root handle 2: dualpi2
 
 echo "Router ready"
