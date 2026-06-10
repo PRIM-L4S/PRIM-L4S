@@ -2,9 +2,9 @@
 
 > Authors: Emre Ucar, Thomas Sauvage, Timothée Fisher
 
-This repository contains the methods we developed to observe the behaviour of various congestion control algorithms. Our work focused on the behaviour of L4S and TCP Prague in different scenarios, such as in networks with Reno clients.
+This repository provides a framework for evaluating the behavior of congestion control algorithms (TCP Prague, Cubic, BBR, Reno) when interacting with a dualpi2 AQM router.
 
-These productions were made as part of our project PRIM at Télécom Paris.
+Developed as part of the PRIM project at Télécom Paris.
 
 ## Folder structure
 
