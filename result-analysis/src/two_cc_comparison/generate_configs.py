@@ -5,6 +5,7 @@ from src.data_types import (
     TwoCCCurveConfig,
     TwoCCGraphConfig,
 )
+from src.two_cc_comparison.constants import METRIC_DISPLAY_NAME, LABEL_DISPLAY_NAME, GRAPH_LANGUAGE
 
 ERROR_T_ALPHA = 1.96  # for a confidence interval of 95%
 
@@ -38,7 +39,7 @@ def generate_clients_medians_curve_config(cc: str, metric: str) -> TwoCCCurveCon
         return median, error
 
     return TwoCCCurveConfig(
-        label=cc,
+        label=LABEL_DISPLAY_NAME.get(cc, cc),
         color=CC_COLORS.get(cc, "tab:blue"),
         compute=compute_function,
     )
@@ -47,11 +48,19 @@ def generate_clients_medians_curve_config(cc: str, metric: str) -> TwoCCCurveCon
 def generate_clients_medians_graph_config(
     cc1: str, cc2: str, other_params: str, metric: str
 ) -> TwoCCGraphConfig:
-
+    
+    match GRAPH_LANGUAGE:
+        case "english":
+            title = f"Comparing the clients' {METRIC_DISPLAY_NAME.get(metric, metric)} when using {LABEL_DISPLAY_NAME.get(cc1, cc1)} and {LABEL_DISPLAY_NAME.get(cc2, cc2)} with parameters {other_params}"
+            yaxis_label = f"Median of {METRIC_DISPLAY_NAME.get(metric, metric)} accross clients grouped by CC"
+        case "french":
+            title = f"Comparaison du {METRIC_DISPLAY_NAME.get(metric, metric)} des clients utilisant {LABEL_DISPLAY_NAME.get(cc1, cc1)} et {LABEL_DISPLAY_NAME.get(cc2, cc2)} avec les paramètres {other_params}"
+            yaxis_label = f"Médianne du {METRIC_DISPLAY_NAME.get(metric, metric)} des clients groupés par CC"
+              
     return TwoCCGraphConfig(
         short_name=metric,
-        title=f"Comparing the clients' {metric} when using {cc1} and {cc2} with parameters {other_params}",
-        yaxis_label=f"Median of {metric} accross clients of each CC",
+        title=title,
+        yaxis_label=yaxis_label,
         cc1=cc1,
         cc2=cc2,
         other_params=other_params,
@@ -77,7 +86,7 @@ def generate_router_median_curve_config(metric: str) -> TwoCCCurveConfig:
         return median, error
 
     return TwoCCCurveConfig(
-        label=metric,
+        label=LABEL_DISPLAY_NAME.get(metric, metric),
         color=QUEUE_COLORS.get(metric, "tab:blue"),
         compute=compute_function,
     )

@@ -81,7 +81,7 @@ def two_cc_comparison(
         key=lambda exp: exp["number_of_cc1"],
     )
 
-    share_cc1 = np.zeros(len(experiments_with_results_and_nbr_ccs))
+    number_cc1 = np.zeros(len(experiments_with_results_and_nbr_ccs))
     curve_values = []
     curve_errors = []
     for i in range(len(graph_config["curves"])):
@@ -93,8 +93,6 @@ def two_cc_comparison(
             compute_curve_values = curve_config["compute"]
             curve_values[j][i], curve_errors[j][i] = compute_curve_values(experiment)
 
-        share_cc1[i] = experiment["number_of_cc1"] / (
-            experiment["number_of_cc1"] + experiment["number_of_cc2"]
-        )
+        number_cc1[i] = experiment["number_of_cc1"]
 
-    return share_cc1, curve_values, curve_errors
+    return number_cc1, curve_values, curve_errors

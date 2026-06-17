@@ -20,10 +20,12 @@ from src.two_cc_comparison.utils import (
 )
 from src.utils import format_y_axis_as_scientific_notation
 
+from src.two_cc_comparison.constants import GRAPH_LANGUAGE, LABEL_DISPLAY_NAME, TITLES_ON_GRAPHS
+
+
 REQUIRE_ZOOM_THRESHOLD = 5.0
 ZOOM_PADDING_RATIO = 0.05
 TITLE_WRAP_THRESHOLD = 100
-
 
 def download_and_save_two_cc_comparison(
     experiments: list[Experiment],
@@ -59,7 +61,7 @@ def download_and_save_two_cc_comparison(
             cc2 = graph_config["cc2"]
             other_params = graph_config["other_params"]
 
-            share_cc1, curve_values, curve_errors = two_cc_comparison(
+            number_cc1, curve_values, curve_errors = two_cc_comparison(
                 relevant_experiments_with_results, graph_config
             )
 
@@ -67,7 +69,7 @@ def download_and_save_two_cc_comparison(
             for j, curve_config in enumerate(graph_config["curves"]):
                 # yerr creates a vertical error bar of height yerr under and yerr above the point.
                 plt.errorbar(
-                    share_cc1,
+                    number_cc1,
                     curve_values[j],
                     yerr=curve_errors[j],
                     label=curve_config["label"],
@@ -75,13 +77,25 @@ def download_and_save_two_cc_comparison(
                     color=curve_config["color"],
                 )
 
-            plt.title(
-                "\n".join(
-                    textwrap.wrap(graph_config["title"], width=TITLE_WRAP_THRESHOLD)
+            if TITLES_ON_GRAPHS:
+                plt.title(
+                    "\n".join(
+                        textwrap.wrap(graph_config["title"], width=TITLE_WRAP_THRESHOLD)
+                    )
                 )
-            )
-            plt.xlabel("Share of clients using " + cc1)
-            plt.gca().xaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0))
+
+            match GRAPH_LANGUAGE:
+                case "english":
+                    xlabel = f"Number of clients using {LABEL_DISPLAY_NAME.get(cc1, cc1)}"
+                case "french":
+                    xlabel = f"Nombre de clients utilisant {LABEL_DISPLAY_NAME.get(cc1, cc1)}"
+            
+            max_number_cc1 = max(number_cc1)
+
+            plt.xlabel(xlabel)
+            axis = plt.gca().xaxis
+            axis.set_major_locator(mticker.MultipleLocator(1))
+            axis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x)}/{int(max_number_cc1)}"))
             plt.ylabel(graph_config["yaxis_label"])
             format_y_axis_as_scientific_notation()
             plt.legend()
@@ -113,11 +127,12 @@ def download_and_save_two_cc_comparison(
                         graph_config["title"]
                         + f" (zoomed on {graph_config['curves'][i]['label']})"
                     )
-                    plt.title(
-                        "\n".join(
-                            textwrap.wrap(zoomed_title, width=TITLE_WRAP_THRESHOLD)
+                    if TITLES_ON_GRAPHS:
+                        plt.title(
+                            "\n".join(
+                                textwrap.wrap(zoomed_title, width=TITLE_WRAP_THRESHOLD)
+                            )
                         )
-                    )
 
                     plt.savefig(
                         graph_filename(

@@ -1,5 +1,3 @@
-import textwrap
-
 from src.data_types import (
     ExperimentWithResults,
     ExperimentWithResultsAndNbrCCs,
@@ -27,7 +25,7 @@ def graph_filename(
     else:
         suffix = ""
 
-    return f"{graph_foldername(cc1, cc2, other_params)}/{graph_short_name}{suffix}.png"
+    return f"{graph_foldername(cc1, cc2, other_params)}/{graph_short_name}{suffix}.svg"
 
 
 def map_experiments_with_results(
