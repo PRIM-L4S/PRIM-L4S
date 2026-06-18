@@ -84,13 +84,13 @@ def download_and_save_two_cc_comparison(
                     )
                 )
 
+            max_number_cc1 = max(number_cc1)
+
             match GRAPH_LANGUAGE:
                 case "english":
-                    xlabel = f"Number of clients using {LABEL_DISPLAY_NAME.get(cc1, cc1)}"
+                    xlabel = f"Number of clients using {LABEL_DISPLAY_NAME.get(cc1, cc1)} among a total of {max_number_cc1} clients"
                 case "french":
-                    xlabel = f"Nombre de clients utilisant {LABEL_DISPLAY_NAME.get(cc1, cc1)}"
-            
-            max_number_cc1 = max(number_cc1)
+                    xlabel = f"Nombre de clients utilisant {LABEL_DISPLAY_NAME.get(cc1, cc1)} parmi un total de {max_number_cc1} clients"
 
             plt.xlabel(xlabel)
             axis = plt.gca().xaxis
