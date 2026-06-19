@@ -5,7 +5,11 @@ from src.data_types import (
     TwoCCCurveConfig,
     TwoCCGraphConfig,
 )
-from src.two_cc_comparison.constants import METRIC_DISPLAY_NAME, LABEL_DISPLAY_NAME, GRAPH_LANGUAGE
+from src.two_cc_comparison.constants import (
+    METRIC_DISPLAY_NAME,
+    LABEL_DISPLAY_NAME,
+    GRAPH_LANGUAGE,
+)
 
 ERROR_T_ALPHA = 1.96  # for a confidence interval of 95%
 
@@ -48,15 +52,15 @@ def generate_clients_medians_curve_config(cc: str, metric: str) -> TwoCCCurveCon
 def generate_clients_medians_graph_config(
     cc1: str, cc2: str, other_params: str, metric: str
 ) -> TwoCCGraphConfig:
-    
+
     match GRAPH_LANGUAGE:
         case "english":
             title = f"Comparing the clients' {METRIC_DISPLAY_NAME.get(metric, metric)} when using {LABEL_DISPLAY_NAME.get(cc1, cc1)} and {LABEL_DISPLAY_NAME.get(cc2, cc2)} with parameters {other_params}"
             yaxis_label = f"Median of {METRIC_DISPLAY_NAME.get(metric, metric)} accross clients, grouped by congestion algorithm"
         case "french":
-            title = f"Comparaison du {METRIC_DISPLAY_NAME.get(metric, metric)} des clients utilisant {LABEL_DISPLAY_NAME.get(cc1, cc1)} et {LABEL_DISPLAY_NAME.get(cc2, cc2)} avec les paramètres {other_params}"
-            yaxis_label = f"Médiane du {METRIC_DISPLAY_NAME.get(metric, metric)} des clients, groupés par algorithme de congestion"
-              
+            title = f"Comparaison {METRIC_DISPLAY_NAME.get(metric, metric)} des clients utilisant {LABEL_DISPLAY_NAME.get(cc1, cc1)} et {LABEL_DISPLAY_NAME.get(cc2, cc2)} avec les paramètres {other_params}"
+            yaxis_label = f"Médiane {METRIC_DISPLAY_NAME.get(metric, metric)} des clients, groupés par algorithme de congestion"
+
     return TwoCCGraphConfig(
         short_name=metric,
         title=title,

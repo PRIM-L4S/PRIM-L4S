@@ -23,19 +23,19 @@ match GRAPH_LANGUAGE:
             "cubic": "Cubic",
             "bbr": "BBR",
             "qdisc_delay_l": "Qdisc delay L",
-            "qdisc_delay_c": "Qdisc delay C"
+            "qdisc_delay_c": "Qdisc delay C",
         }
     case "french":
         METRIC_DISPLAY_NAME = {
-            "qdisc_delay": "délai qdisc",
-            "ss_bytes_acked": "nombre d'octets ackés",
-            "ss_bytes_retrans": "nombre d'octets retransmis",
-            "ss_bytes_sent": "nombre d'octets envoyés",
-            "ss_delivery_rate": "throughput (en B/s)",
-            "ss_rtt": "RTT (en µs)",
-            "ss_rttvar": "jitter (en µs)",
-            "ss_snd_cwnd": "taille de la fenêtre de congestion (en unités de MSS)",
-            "ss_snd_ssthresh": "seuil de slow start (en unités de MSS)",
+            "qdisc_delay": "du délai qdisc",
+            "ss_bytes_acked": "du nombre d'octets ackés",
+            "ss_bytes_retrans": "du nombre d'octets retransmis",
+            "ss_bytes_sent": "du nombre d'octets envoyés",
+            "ss_delivery_rate": "du débit (en B/s)",
+            "ss_rtt": "de la latence (en µs)",
+            "ss_rttvar": "de la gigue (en µs)",
+            "ss_snd_cwnd": "de la taille de la fenêtre de congestion (en unités de MSS)",
+            "ss_snd_ssthresh": "du seuil de slow start (en unités de MSS)",
         }
 
         LABEL_DISPLAY_NAME = {
@@ -43,5 +43,5 @@ match GRAPH_LANGUAGE:
             "cubic": "Cubic",
             "bbr": "BBR",
             "qdisc_delay_l": "Délai qdisc L",
-            "qdisc_delay_c": "Délai qdisc C"
+            "qdisc_delay_c": "Délai qdisc C",
         }

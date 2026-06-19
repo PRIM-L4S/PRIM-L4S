@@ -3,6 +3,7 @@ __pycache__/
 docker-testbed/dist
 target/
 
+count-lines.py
 .~lock*
 *@*+*+*.json
 
